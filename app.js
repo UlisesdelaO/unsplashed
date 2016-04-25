@@ -1,6 +1,6 @@
-/**  FamousJS Puzzle Game (Work In Progress)
- *   Author: Farias Maiquita http://farias.gotolab.co
- *   Last Nodified: March 1st 2016
+/**  Unsplashed - FamousJS Image Puzzle Concept Game (Work In Progress)
+ *   Author: Farias Maiquita http://codepen.io/fariasmaiquita/
+ *   License: GNU GENERAL PUBLIC LICENSE Version 3
  */
 
 'use strict';
@@ -18,27 +18,26 @@ var FamousEngine = famous.core.FamousEngine,
 
 // Puzzle App Module
 
-function PuzzleApp() {
+function PuzzleApp(contextSize) {
     Node.call(this);
     this.el = new DOMElement(this, {tagName: 'puzzle-app'});
     
     this.roundData = {
         counter: 1,
-        piecesPerRow: 3//_randomIntBetween(2, 4)
+        piecesPerRow: 4//_randomIntBetween(2, 4)
     };
     
     this.board = this.addChild(new Board(this.roundData.piecesPerRow));
     this.boardMaxWidth = 1080;
-    this.resizeChildren();
+    this.resizeChildren(contextSize);
 
     _bindPuzzleAppEvents.call(this);
 }
 
 PuzzleApp.prototype = Object.create(Node.prototype);
 
-PuzzleApp.prototype.resizeChildren = function ()  {
-    var boardWidth = window.innerWidth > window.innerHeight ?
-        window.innerHeight : window.innerWidth;
+PuzzleApp.prototype.resizeChildren = function (contextSize)  {
+    var boardWidth = contextSize[0];
     boardWidth = boardWidth > this.boardMaxWidth ?
         this.boardMaxWidth : boardWidth;
     this.board.resizeChildren(boardWidth);
@@ -147,6 +146,8 @@ function Board(piecesPerRow) {
     
     this.piecesPerRow = piecesPerRow;
     this.el = new DOMElement(this, {tagName: 'board'});
+    
+
     this.setupRound(piecesPerRow);
 }
 
@@ -329,12 +330,21 @@ function _randomIntBetween(minInt, maxInt) {
 
 // Main Module
 
-function initApp() {
+function initAppOn(sceneSelector) {
     FamousEngine.init();
-    var puzzleApp = FamousEngine.createScene().addChild(new PuzzleApp());
-    window.onresize = function () {
-        puzzleApp.resizeChildren();
-    }
+    var puzzleApp,
+        puzzleAppScene = FamousEngine.createScene(sceneSelector);
+    puzzleAppScene.addComponent({
+        onReceive: function (e, payload) {
+            if (e === 'CONTEXT_RESIZE') {
+                if (puzzleApp) {
+                    puzzleApp.resizeChildren(payload);
+                } else {
+                    puzzleApp = puzzleAppScene.addChild(new PuzzleApp(payload));
+                }
+            }
+        }.bind(this)
+    });
 }
 
-initApp();
+initAppOn('.phone .screen');

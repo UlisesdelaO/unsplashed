@@ -11,7 +11,39 @@ html, body {
     padding: 0px;
 }
 body {
+    background: #252527;
+}
+.wrapper {
     position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+}
+.children-centered {
+    position: relative;
+    text-align: center;
+}
+.children-centered:after {
+    content: '\0020';
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+}
+.children-centered > * {
+    display: inline-block;
+    vertical-align: middle;
+}
+.phone {
+    width: 430px;
+    height: 885px;
+    margin: 25px 0;
+    border-radius: 55px;
+    box-shadow: inset 0 0 0 2px #444;
+}
+.phone .screen {
+    width: 375px;
+    height: 667px;
+    box-shadow: 0 0 0 2px #444;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     -webkit-font-smoothing: antialiased;
@@ -19,7 +51,6 @@ body {
     -webkit-perspective: 0;
     perspective: none;
     overflow: hidden;
-    background: #333;
 }
 board {
     background-color: white;
