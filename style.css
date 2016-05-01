@@ -1,78 +1,129 @@
 * {
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    padding: 0px;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
 }
 body {
-    background: #252527;
+  background: #252527;
 }
 .wrapper {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow-y: scroll;
+  position: fixed;
+  width: 100%;
+  min-width: 480px;
+  height: 100%;
+  overflow-y: scroll;
 }
 .children-centered {
-    position: relative;
-    text-align: center;
+  position: relative;
+  text-align: center;
 }
 .children-centered:after {
-    content: '\0020';
-    display: inline-block;
-    vertical-align: middle;
-    height: 100%;
+  content: '\0020';
+  display: inline-block;
+  vertical-align: middle;
+  height: 100%;
 }
 .children-centered > * {
-    display: inline-block;
-    vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
+}
+.children-float:after {
+  content: "\0020";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+.children-float > * {
+  float: left;
 }
 .phone {
-    width: 430px;
-    height: 885px;
-    margin: 25px 0;
-    border-radius: 55px;
-    box-shadow: inset 0 0 0 2px #444;
+  width: 430px;
+  height: 885px;
+  margin: 25px 0;
+  border-radius: 55px;
+  box-shadow: inset 0 0 0 5px #444;
 }
 .phone .screen {
-    width: 375px;
-    height: 667px;
-    box-shadow: 0 0 0 2px #444;
-    -webkit-transform-style: preserve-3d;
-    transform-style: preserve-3d;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-perspective: 0;
-    perspective: none;
-    overflow: hidden;
+  width: 375px;
+  height: 667px;
+  box-shadow: 0 0 0 5px #444;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-perspective: 0;
+  perspective: none;
+  overflow: hidden;
 }
-board {
-    background-color: white;
+
+.puzzle-app {
+  position: relative;
+  background: #fff;
 }
-piece {
-    z-index: 2 !important;
-    cursor: pointer;
-    background-repeat: no-repeat;
-    background-color: white;
-    position: relative;
-    -webkit-transition: box-shadow 100ms;
-    transition: box-shadow 100ms;
+.puzzle-app, .puzzle-app button {
+  font-family: "Montserrat";
+  font-size: 16px;
 }
-piece:hover {
-    /* To be removed on mobile app version  */
-    z-index: 3 !important;
-    box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.8);
+.puzzle-app .view {
+  position: relative;
 }
-piece.in-motion {
-    z-index: 4 !important;
-    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.8);
+.puzzle-app .view > * {
+  margin: 0;
 }
-piece.to-swap {
-    z-index: 1 !important;
+.puzzle-app .view-row {
+  background: #fff;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, .5);
+}
+.puzzle-app .view-row .children-centered {
+  height: 100%;
+}
+.puzzle-app .view-row .column.icon .children-centered i {
+  background: #000;
+  display: inline-block;
+  position: relative;
+  width: 60%;
+  height: 60%;
+}
+.puzzle-app .view-row .column.text .children-centered {
+  text-align: left;
+}
+.puzzle-app .view-row button {
+  border: 2px solid #000;
+  border-radius: 18px;
+  height: 36px;
+  background: transparent;
+  padding: 0 15px;
+  margin: 0 5px;
+}
+.board {
+  background-color: white;
+}
+.piece {
+  z-index: 2 !important;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-color: white;
+  position: relative;
+  -webkit-transition: box-shadow 100ms;
+  transition: box-shadow 100ms;
+}
+.piece:hover {
+  /* To be removed on mobile app version  */
+  z-index: 3 !important;
+  box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.8);
+}
+.piece.in-motion {
+  z-index: 4 !important;
+  box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.8);
+}
+.piece.to-swap {
+  z-index: 1 !important;
 }
