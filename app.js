@@ -20,6 +20,8 @@ var FamousEngine = famous.core.FamousEngine,
 
 function PuzzleApp(contextSize) {
   Node.call(this);
+  this.stats = { wins: 0, losses: 0 };
+
   this.el = new DOMElement(this, { attributes: { class: 'puzzle-app' } });
 
   this.views = {
@@ -44,7 +46,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><i class="rotation-icon"></i></div>'
+                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-loop.svg"></div>'
               },
               width: 2/9
             },
@@ -64,7 +66,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><i class="rotation-icon"></i></div>'
+                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-shuffle.svg"></div>'
               },
               width: 2/9
             },
@@ -84,7 +86,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><i class="rotation-icon"></i></div>'
+                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-skull.svg"></div>'
               },
               width: 2/9
             },
@@ -104,32 +106,97 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><i class="rotation-icon"></i></div>'
+                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-graph-pie.svg"></div>'
               },
               width: 2/9
             },
             {
-              options: {
-                attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Win Stats:<br>2 (33%)</span></div>'
-              },
-              width: 3.3/9
+              options: { attributes: { class: 'column text' } },
+              width: 3.3/9,
+              children: [
+                {
+                  options: {
+                    attributes: { class: 'row-header' },
+                    content: '<div class="title">Win Stats<span></div>'
+                  },
+                  height: 1/2
+                },
+                {
+                  options: {
+                    attributes: { class: 'row-main' },
+                    content: '&mdash;'
+                  },
+                  height: 1/2,
+                  key: 'winStatsNode'
+                }
+              ]
             },
             {
-              options: {
-                attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Loss Stats:<br>4 (67%)</span></div>'
-              },
-              width: 3.3/9
+              options: { attributes: { class: 'column text' } },
+              width: 3.3/9,
+              children: [
+                {
+                  options: {
+                    attributes: { class: 'row-header' },
+                    content: '<div class="title">Loss Stats</div>'
+                  },
+                  height: 1/2
+                },
+                {
+                  options: {
+                    attributes: { class: 'row-main' },
+                    content: '&mdash;'
+                  },
+                  height: 1/2,
+                  key: 'lossStatsNode'
+                }
+              ]
             }
           ]
         },
         {
           options: {
             attributes: { class: 'view-row children-float' },
-            content: '<div class="children-centered"><button>Resume</button><button>New Challenge</button></div>'
           },
-          height: 1/8
+          height: 1/8,
+          children: [
+            {
+              options: { attributes: {class: 'column children-centered' } },
+              width: 1/2,
+              children: [
+                {
+                  options: {
+                    tagName: 'button',
+                    attributes: {
+                      class: 'resume-puzzle',
+                      style: 'display: inline-block'
+                    }
+                  },
+                  width: 8/9,
+                  height: 1/2,
+                  key: 'resumePuzzleBtn'
+                }
+              ]
+            },
+            {
+              options: { attributes: {class: 'column children-centered' } },
+              width: 1/2,
+              children: [
+                {
+                  options: {
+                    tagName: 'button',
+                    attributes: {
+                      class: 'new-puzzle',
+                      style: 'display: inline-block'
+                    }
+                  },
+                  width: 8/9,
+                  height: 1/2,
+                  key: 'newPuzzleBtn'
+                }
+              ]
+            }
+          ]
         },
         {
           options: { attributes: { class: 'view-row' } },
