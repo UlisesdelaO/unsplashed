@@ -46,7 +46,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-loop.svg"></div>'
+                content: '<div class="children-centered"><svg class="lnr lnr-redo"><use xlink:href="#lnr-redo"></use></svg></div>'
               },
               width: 2/9
             },
@@ -66,7 +66,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-shuffle.svg"></div>'
+                content: '<div class="children-centered"><svg class="lnr lnr-move"><use xlink:href="#lnr-move"></use></svg></div>'
               },
               width: 2/9
             },
@@ -86,7 +86,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-skull.svg"></div>'
+                content: '<div class="children-centered"><svg class="lnr lnr-warning"><use xlink:href="#lnr-warning"></use></svg></div>'
               },
               width: 2/9
             },
@@ -106,7 +106,7 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><img src="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/svgs/fi-graph-pie.svg"></div>'
+                content: '<div class="children-centered"><svg class="lnr lnr-pie-chart"><use xlink:href="#lnr-pie-chart"></use></svg></div>'
               },
               width: 2/9
             },
@@ -168,11 +168,11 @@ function PuzzleApp(contextSize) {
                   options: {
                     tagName: 'button',
                     attributes: {
-                      class: 'resume-puzzle',
+                      class: 'resume-puzzle inactive',
                       style: 'display: inline-block'
                     }
                   },
-                  width: 8/9,
+                  width: 7.5/9,
                   height: 1/2,
                   key: 'resumePuzzleBtn'
                 }
@@ -190,7 +190,7 @@ function PuzzleApp(contextSize) {
                       style: 'display: inline-block'
                     }
                   },
-                  width: 8/9,
+                  width: 7.5/9,
                   height: 1/2,
                   key: 'newPuzzleBtn'
                 }
@@ -208,6 +208,8 @@ function PuzzleApp(contextSize) {
     challenge:  {}
   };
   
+  // this.resumePuzzleBtn.el.addClass('inactive'); //not working, for whatever reason!!!
+
   this.roundData = {
     counter: 1,
     piecesPerRow: 4//_randomIntBetween(2, 4)

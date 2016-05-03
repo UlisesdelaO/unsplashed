@@ -10,8 +10,8 @@ html, body {
   margin: 0px;
   padding: 0px;
 }
-body {
-  background: #252527;
+svg path {
+  fill: #fff;
 }
 .wrapper {
   position: fixed;
@@ -67,10 +67,12 @@ body {
 .puzzle-app {
   position: relative;
   background: #fff;
+  color: #fff;
 }
 .puzzle-app, .puzzle-app button {
   font-family: "Montserrat";
   font-size: 16px;
+  color: #fff;
 }
 .puzzle-app .view {
   position: relative;
@@ -82,6 +84,14 @@ body {
   background: #fff;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, .5);
 }
+.puzzle-app .view-row:nth-child(8) { background: #513b56; }
+.puzzle-app .view-row:nth-child(7) { background: #525174; }
+.puzzle-app .view-row:nth-child(6) { background: #436e8e; }
+.puzzle-app .view-row:nth-child(5) { background: #348aa7; }
+.puzzle-app .view-row:nth-child(4) { background: #49afa3; }
+.puzzle-app .view-row:nth-child(3) { background: #5dd39e; }
+.puzzle-app .view-row:nth-child(2) { background: #8ddd91; }
+.puzzle-app .view-row:nth-child(1) { background: #bce784; }
 .puzzle-app .view-row .children-centered {
   height: 100%;
 }
@@ -90,11 +100,11 @@ body {
   font-weight: bold;
   text-transform: uppercase;
 }
-.puzzle-app .view-row .column.icon .children-centered img {
+.puzzle-app .view-row .column.icon .children-centered svg { 
   display: inline-block;
   position: relative;
-  max-width: 60%;
-  max-height: 60%;
+  max-width: 50%;
+  max-height: 50%;
 }
 .puzzle-app .view-row .column.text,
 .puzzle-app .view-row .column.text .children-centered {
@@ -106,13 +116,17 @@ body {
 }
 .puzzle-app .view-row button {
   border-width: 0;
-  box-shadow: inset 0 0 0 2px #000;
+  box-shadow: inset 0 0 0 2px #fff;
   border-radius: 5px;
   padding: 0;
   margin: 0;
   background: transparent;
   outline: none;
   cursor: pointer;
+}
+.puzzle-app .view-row button.inactive {
+  opacity: .5;
+  cursor: default;
 }
 .puzzle-app .view-row button.resume-puzzle {
   margin-left: 5%;
@@ -122,6 +136,7 @@ body {
 }
 .puzzle-app .view-row button.new-puzzle {
   margin-right: 5%;
+  background: rgba(255, 255, 255, .1);
 }
 .puzzle-app .view-row button.new-puzzle:before {
   content: 'New Puzzle';
