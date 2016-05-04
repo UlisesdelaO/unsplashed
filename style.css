@@ -13,12 +13,39 @@ html, body {
 svg path {
   fill: #fff;
 }
-.wrapper {
+main.wrapper {
+  display: block;
   position: fixed;
   width: 100%;
-  min-width: 480px;
+  min-width: 530px;
   height: 100%;
   overflow-y: scroll;
+}
+footer.credits {
+  display: block;
+  position: fixed;
+  left: 12px;
+  bottom: 8px;
+  transform-origin: 0 0;
+  transform: rotate3d(0, 0, 1, -90deg);
+  text-align: center;
+  font-family: "Montserrat";
+  font-size: 12px;
+  color: #666;
+  vertical-align: middle;
+}
+footer.credits:before {
+  content: '\0020';
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  margin-right: 5px;
+  background: #666;
+  vertical-align: middle;
+}
+footer.credits a {
+  color: #444;
+  text-decoration: underline;
 }
 .children-centered {
   position: relative;
@@ -71,11 +98,14 @@ svg path {
 }
 .puzzle-app, .puzzle-app button {
   font-family: "Montserrat";
-  font-size: 16px;
+  font-size: 15px;
   color: #fff;
 }
 .puzzle-app .view {
   position: relative;
+}
+.puzzle-app .view.hidden {
+  visibility: hidden;
 }
 .puzzle-app .view > * {
   margin: 0;
@@ -94,6 +124,16 @@ svg path {
 .puzzle-app .view-row:nth-child(1) { background: #bce784; }
 .puzzle-app .view-row .children-centered {
   height: 100%;
+}
+.puzzle-app .view-row svg.lnr-crop {
+  max-width: 40%;
+  max-height: 40%;
+}
+.puzzle-app .view-row.header svg.lnr-crop {
+  transform: rotate3d(0, 0, 1, 135deg);
+}
+.puzzle-app .view-row.footer svg.lnr-crop {
+  transform: rotate3d(0, 0, 1, -45deg);
 }
 .puzzle-app .view-row .logo {
   font-size: 30px;

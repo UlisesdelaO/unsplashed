@@ -26,10 +26,13 @@ function PuzzleApp(contextSize) {
 
   this.views = {
     home: this.addChild(new ViewItem(this, {
-      options: { attributes: { class: 'home view'} },
+      options: { attributes: { class: 'home view hidden' } },
       children: [
         {
-          options: { attributes: { class: 'view-row' } },
+          options: {
+            attributes: { class: 'view-row header' },
+            content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
+          },
           height: 1/8
         },
         {
@@ -86,14 +89,14 @@ function PuzzleApp(contextSize) {
             {
               options: {
                 attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><svg class="lnr lnr-warning"><use xlink:href="#lnr-warning"></use></svg></div>'
+                content: '<div class="children-centered"><svg class="lnr lnr-hourglass"><use xlink:href="#lnr-hourglass"></use></svg></div>'
               },
               width: 2/9
             },
             {
               options: {
                 attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Moves are very limited, triple-check before making one</span></div>'
+                content: '<div class="children-centered"><span>Beware of the moves counter though, moves are not unlimited</span></div>'
               },
               width: 6.6/9
             }
@@ -199,15 +202,23 @@ function PuzzleApp(contextSize) {
           ]
         },
         {
-          options: { attributes: { class: 'view-row' } },
+          options: {
+            attributes: { class: 'view-row footer' },
+            content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
+          },
           height: 1/8
         }
       ]
     })),
 
-    challenge:  {}
+    puzzle: {}
   };
   
+  //this.views.home.on
+
+  // NEED TO FIND AN EVENT THAT IS TRIGGER WHEN THE DOM RENDERER FINISHES RENDERING
+
+  //console.log(this.views.home.el);
   // this.resumePuzzleBtn.el.addClass('inactive'); //not working, for whatever reason!!!
 
   this.roundData = {
@@ -332,7 +343,7 @@ function _bindPuzzleAppEvents() {
 }
 
 
-// View Module
+// ViewIteme Module
 
 function ViewItem(rootNode, tree) {
   Node.call(this);
