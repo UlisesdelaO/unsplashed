@@ -20,206 +20,35 @@ var FamousEngine = famous.core.FamousEngine,
 
 function PuzzleApp(contextSize) {
   Node.call(this);
-  this.stats = { wins: 0, losses: 0 };
-
   this.el = new DOMElement(this, { attributes: { class: 'puzzle-app' } });
-
   this.views = {
-    home: this.addChild(new ViewItem(this, {
-      options: { attributes: { class: 'home view hidden' } },
-      children: [
-        {
-          options: {
-            attributes: { class: 'view-row header' },
-            content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
-          },
-          height: 1/8
-        },
-        {
-          options: {
-            attributes: { class: 'view-row' },
-            content: '<div class="children-centered"><div class="logo">Unsplashed</div></div>'
-          },
-          height: 1/8
-        },
-        {
-          options: { attributes: { class: 'view-row children-float' } },
-          height: 1/8,
-          children: [
-            {
-              options: {
-                attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><svg class="lnr lnr-redo"><use xlink:href="#lnr-redo"></use></svg></div>'
-              },
-              width: 2/9
-            },
-            {
-              options: {
-                attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Tap pieces to rotate them 90 degrees clockwise</span></div>'
-              },
-              width: 6.6/9
-            }
-          ]
-        },
-        {
-          options: { attributes: { class: 'view-row children-float' } },
-          height: 1/8,
-          children: [
-            {
-              options: {
-                attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><svg class="lnr lnr-move"><use xlink:href="#lnr-move"></use></svg></div>'
-              },
-              width: 2/9
-            },
-            {
-              options: {
-                attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Drag and drop pieces to swap their positions</span></div>'
-              },
-              width: 6.6/9
-            }
-          ]
-        },
-        {
-          options: { attributes: { class: 'view-row children-float' } },
-          height: 1/8,
-          children: [
-            {
-              options: {
-                attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><svg class="lnr lnr-hourglass"><use xlink:href="#lnr-hourglass"></use></svg></div>'
-              },
-              width: 2/9
-            },
-            {
-              options: {
-                attributes: { class: 'column text' },
-                content: '<div class="children-centered"><span>Beware of the moves counter though, moves are not unlimited</span></div>'
-              },
-              width: 6.6/9
-            }
-          ]
-        },
-        {
-          options: { attributes: { class: 'view-row children-float' } },
-          height: 1/8,
-          children: [
-            {
-              options: {
-                attributes: { class: 'column icon' },
-                content: '<div class="children-centered"><svg class="lnr lnr-pie-chart"><use xlink:href="#lnr-pie-chart"></use></svg></div>'
-              },
-              width: 2/9
-            },
-            {
-              options: { attributes: { class: 'column text' } },
-              width: 3.3/9,
-              children: [
-                {
-                  options: {
-                    attributes: { class: 'row-header' },
-                    content: '<div class="title">Win Stats<span></div>'
-                  },
-                  height: 1/2
-                },
-                {
-                  options: {
-                    attributes: { class: 'row-main' },
-                    content: '&mdash;'
-                  },
-                  height: 1/2,
-                  key: 'winStatsNode'
-                }
-              ]
-            },
-            {
-              options: { attributes: { class: 'column text' } },
-              width: 3.3/9,
-              children: [
-                {
-                  options: {
-                    attributes: { class: 'row-header' },
-                    content: '<div class="title">Loss Stats</div>'
-                  },
-                  height: 1/2
-                },
-                {
-                  options: {
-                    attributes: { class: 'row-main' },
-                    content: '&mdash;'
-                  },
-                  height: 1/2,
-                  key: 'lossStatsNode'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          options: {
-            attributes: { class: 'view-row children-float' },
-          },
-          height: 1/8,
-          children: [
-            {
-              options: { attributes: {class: 'column children-centered' } },
-              width: 1/2,
-              children: [
-                {
-                  options: {
-                    tagName: 'button',
-                    attributes: {
-                      class: 'resume-puzzle inactive',
-                      style: 'display: inline-block'
-                    }
-                  },
-                  width: 7.5/9,
-                  height: 1/2,
-                  key: 'resumePuzzleBtn'
-                }
-              ]
-            },
-            {
-              options: { attributes: {class: 'column children-centered' } },
-              width: 1/2,
-              children: [
-                {
-                  options: {
-                    tagName: 'button',
-                    attributes: {
-                      class: 'new-puzzle',
-                      style: 'display: inline-block'
-                    }
-                  },
-                  width: 7.5/9,
-                  height: 1/2,
-                  key: 'newPuzzleBtn'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          options: {
-            attributes: { class: 'view-row footer' },
-            content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
-          },
-          height: 1/8
-        }
-      ]
-    })),
-
+    home: this.addChild(new ViewItem(this, this.getHomeViewTree())),
     puzzle: {}
   };
   
-  //this.views.home.on
-
-  // NEED TO FIND AN EVENT THAT IS TRIGGER WHEN THE DOM RENDERER FINISHES RENDERING
-
-  //console.log(this.views.home.el);
-  // this.resumePuzzleBtn.el.addClass('inactive'); //not working, for whatever reason!!!
+  // To be moved to the bind puzzle app events, probably
+  var rootNode = this;
+  this.views.home.addComponent({
+    onMount: function(node) {
+      rootNode.resumePuzzleBtn.addComponent({
+        onMount: function(node) {
+          node.el.addClass('inactive');
+          node.addUIEvent('click');
+        },
+        onReceive: function(e, payload) {
+          console.log('"Resume Puzzle" button was clicked');
+        }
+      });
+      rootNode.newPuzzleBtn.addComponent({
+        onMount: function(node) {
+          node.addUIEvent('click');
+        },
+        onReceive: function(e, payload) {
+          console.log('"New Puzzle" button was clicked');
+        }
+      });
+    }
+  });
 
   this.roundData = {
     counter: 1,
@@ -230,9 +59,200 @@ function PuzzleApp(contextSize) {
   this.boardMaxWidth = 1080;
   this.resizeChildren(contextSize);
   //_bindPuzzleAppEvents.call(this);
+
 }
 
 PuzzleApp.prototype = Object.create(Node.prototype);
+
+PuzzleApp.prototype.getHomeViewTree = function () {
+  return {
+    options: { attributes: { class: 'home view' } },
+    children: [
+      {
+        options: {
+          attributes: { class: 'view-row header' },
+          content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
+        },
+        height: 1/8
+      },
+      {
+        options: {
+          attributes: { class: 'view-row' },
+          content: '<div class="children-centered"><div class="logo">Unsplashed</div></div>'
+        },
+        height: 1/8
+      },
+      {
+        options: { attributes: { class: 'view-row children-float' } },
+        height: 1/8,
+        children: [
+          {
+            options: {
+              attributes: { class: 'column icon' },
+              content: '<div class="children-centered"><svg class="lnr lnr-redo"><use xlink:href="#lnr-redo"></use></svg></div>'
+            },
+            width: 2/9
+          },
+          {
+            options: {
+              attributes: { class: 'column text' },
+              content: '<div class="children-centered"><span>Tap pieces to rotate them 90 degrees clockwise</span></div>'
+            },
+            width: 6.6/9
+          }
+        ]
+      },
+      {
+        options: { attributes: { class: 'view-row children-float' } },
+        height: 1/8,
+        children: [
+          {
+            options: {
+              attributes: { class: 'column icon' },
+              content: '<div class="children-centered"><svg class="lnr lnr-move"><use xlink:href="#lnr-move"></use></svg></div>'
+            },
+            width: 2/9
+          },
+          {
+            options: {
+              attributes: { class: 'column text' },
+              content: '<div class="children-centered"><span>Drag and drop pieces to swap their positions</span></div>'
+            },
+            width: 6.6/9
+          }
+        ]
+      },
+      {
+        options: { attributes: { class: 'view-row children-float' } },
+        height: 1/8,
+        children: [
+          {
+            options: {
+              attributes: { class: 'column icon' },
+              content: '<div class="children-centered"><svg class="lnr lnr-hourglass"><use xlink:href="#lnr-hourglass"></use></svg></div>'
+            },
+            width: 2/9
+          },
+          {
+            options: {
+              attributes: { class: 'column text' },
+              content: '<div class="children-centered"><span>Beware of the moves counter, moves are not unlimited</span></div>'
+            },
+            width: 6.6/9
+          }
+        ]
+      },
+      {
+        options: { attributes: { class: 'view-row children-float' } },
+        height: 1/8,
+        children: [
+          {
+            options: {
+              attributes: { class: 'column icon' },
+              content: '<div class="children-centered"><svg class="lnr lnr-pie-chart"><use xlink:href="#lnr-pie-chart"></use></svg></div>'
+            },
+            width: 2/9
+          },
+          {
+            options: { attributes: { class: 'column text' } },
+            width: 3.3/9,
+            children: [
+              {
+                options: {
+                  attributes: { class: 'row-header' },
+                  content: '<div class="title">Win Stats<span></div>'
+                },
+                height: 1/2
+              },
+              {
+                options: {
+                  attributes: { class: 'row-main' },
+                  content: '&mdash;'
+                },
+                height: 1/2,
+                key: 'winStatsNode'
+              }
+            ]
+          },
+          {
+            options: { attributes: { class: 'column text' } },
+            width: 3.3/9,
+            children: [
+              {
+                options: {
+                  attributes: { class: 'row-header' },
+                  content: '<div class="title">Loss Stats</div>'
+                },
+                height: 1/2
+              },
+              {
+                options: {
+                  attributes: { class: 'row-main' },
+                  content: '&mdash;'
+                },
+                height: 1/2,
+                key: 'lossStatsNode'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        options: {
+          attributes: { class: 'view-row children-float' },
+        },
+        height: 1/8,
+        children: [
+          {
+            options: { attributes: {class: 'column children-centered' } },
+            width: 1/2,
+            children: [
+              {
+                options: {
+                  tagName: 'button',
+                  attributes: {
+                    class: 'resume-puzzle',
+                    style: 'display: inline-block'
+                  }
+                },
+                width: 7.5/9,
+                height: 1/2,
+                //uiEvents: ['mouseup'],
+                key: 'resumePuzzleBtn'
+              }
+            ]
+          },
+          {
+            options: { attributes: {class: 'column children-centered' } },
+            width: 1/2,
+            children: [
+              {
+                options: {
+                  tagName: 'button',
+                  attributes: {
+                    class: 'new-puzzle',
+                    style: 'display: inline-block'
+                  }
+                },
+                width: 7.5/9,
+                height: 1/2,
+                //uiEvents: ['mouseup'],
+                key: 'newPuzzleBtn'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        options: {
+          attributes: { class: 'view-row footer' },
+          content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
+        },
+        height: 1/8
+      }
+    ]
+  };
+}
 
 PuzzleApp.prototype.resizeChildren = function (contextSize)  {
   var boardWidth = contextSize[0];
@@ -250,13 +270,11 @@ function _bindPuzzleAppEvents() {
   this.addUIEvent('mouseup');
   this.addUIEvent('touchend');
 
-  this.startBtn.addUIEvent('click');
-
   this.addComponent({
     onReceive: function (e, payload) {
 
-      if ((e === 'click') && (payload.node.key === 'startBtn')) {
-        console.log('the start button was clicked');
+      if ((e === 'mouseup') /*&& (payload.node.key === 'resumePuzzleBtn')*/) {
+        console.log('a button was clicked');
       }
 
       if ((e === 'mousedown' || e === 'touchstart') && (payload.node.constructor === Piece)) {
@@ -352,8 +370,14 @@ function ViewItem(rootNode, tree) {
   this.setProportionalSize(width, height);
   this.el = new DOMElement(this, tree.options);
   if (tree.key) {
+    this.key = tree.key;
     rootNode[tree.key] = this;
   }
+  /*if (tree.uiEvents) {
+    for (var i = 0; i < tree.uiEvents.length; i++) {
+      this.addUIEvent(tree.uiEvents[i]);
+    }
+  }*/
   if (tree.children) {
     this.children = [];
     for (var i = 0; i < tree.children.length; i++) {
