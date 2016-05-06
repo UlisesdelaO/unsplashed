@@ -12,6 +12,7 @@ var FamousEngine = famous.core.FamousEngine,
     Position = famous.components.Position,
     Rotation = famous.components.Rotation,
     Scale = famous.components.Scale,
+    //Size = famous.components.Size,
     GestureHandler = famous.components.GestureHandler,
     DOMElement = famous.domRenderables.DOMElement;
 
@@ -74,6 +75,52 @@ PuzzleApp.prototype.getHomeViewTree = function () {
           content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
         },
         height: 1/8
+        /*options: {
+          attributes: { class: 'view-row children-float' },
+        },
+        height: 1/8,
+        children: [
+          {
+            options: { attributes: {class: 'column children-centered' } },
+            width: 1/2,
+            children: [
+              {
+                options: {
+                  tagName: 'button',
+                  attributes: {
+                    class: 'resume-puzzle',
+                    style: 'display: inline-block'
+                  },
+                  content: '<span>Back to Menu</span>'
+                },
+                width: 7.5/9,
+                height: 1/2,
+                //uiEvents: ['mouseup'],
+                key: 'resumePuzzleBtn'
+              }
+            ]
+          },
+          {
+            options: { attributes: {class: 'column children-centered' } },
+            width: 1/2,
+            children: [
+              {
+                options: {
+                  tagName: 'button',
+                  attributes: {
+                    class: 'new-puzzle',
+                    style: 'display: inline-block'
+                  },
+                  content: '<span>Snap Puzzle</span>'
+                },
+                width: 7.5/9,
+                height: 1/2,
+                //uiEvents: ['mouseup'],
+                key: 'newPuzzleBtn'
+              }
+            ]
+          }
+        ]*/
       },
       {
         options: {
@@ -213,7 +260,8 @@ PuzzleApp.prototype.getHomeViewTree = function () {
                   attributes: {
                     class: 'resume-puzzle',
                     style: 'display: inline-block'
-                  }
+                  },
+                  content: '<span>Resume Puzzle</span>'
                 },
                 width: 7.5/9,
                 height: 1/2,
@@ -232,7 +280,8 @@ PuzzleApp.prototype.getHomeViewTree = function () {
                   attributes: {
                     class: 'new-puzzle',
                     style: 'display: inline-block'
-                  }
+                  },
+                  content: '<span>New Puzzle</span>'
                 },
                 width: 7.5/9,
                 height: 1/2,
@@ -367,7 +416,12 @@ function ViewItem(rootNode, tree) {
   Node.call(this);
   var width = tree.width || 1,
       height = tree.height || 1;
-  this.setProportionalSize(width, height);
+  if (tree.options.tagName == 'button') {
+    this.setSizeMode('relative', 'render');
+    this.setProportionalSize(width, height);
+  } else {
+    this.setProportionalSize(width, height);
+  }
   this.el = new DOMElement(this, tree.options);
   if (tree.key) {
     this.key = tree.key;
