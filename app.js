@@ -61,9 +61,45 @@ function PuzzleApp(contextSize) {
   this.resizeChildren(contextSize);
   //_bindPuzzleAppEvents.call(this);
 
+
+
 }
 
 PuzzleApp.prototype = Object.create(Node.prototype);
+
+function Menu() {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['home', 'view'] });
+  this.plaques = [
+    this.addChild(new Plaque([{ icon: 'crop' }]),
+    this.addChild(new Plaque([{ rows: [{ class: 'logo', text: 'Unsplashed'}] }])),
+    this.addChild(new Plaque([
+      { icon: 'redo'},
+      { rows: [{ text: 'Tap pieces to rotate them 90 degrees clockwise' }] }
+    ])),
+    this.addChild(new Plaque([
+      { icon: 'move'},
+      { rows: [{ text: 'Drag and drop pieces to swap their positions' }] }
+    ])),
+    this.addChild(new Plaque([
+      { icon: 'hourglass'},
+      { rows: [{ text: 'Beware of the moves counter, moves are not unlimited' }] }
+    ])),
+    this.addChild(new Plaque([
+      { icon: 'pie-chart'},
+      { rows: [
+        { text: 'Win Stats' },
+        { tex: '&mdash;', key: 'winStatsNode' }
+      ] },
+      { rows: [
+        { text: 'Loss Stats' },
+        { tex: '&mdash;', key: 'lossStatsNode' }
+      ] }
+    ])),
+
+  ];
+}
+Menu.prototype = Object.create(Node.prototype);
 
 PuzzleApp.prototype.getHomeViewTree = function () {
   return {
@@ -75,52 +111,6 @@ PuzzleApp.prototype.getHomeViewTree = function () {
           content: '<div class="children-centered"><svg class="lnr lnr-crop"><use xlink:href="#lnr-crop"></use></svg></div>'
         },
         height: 1/8
-        /*options: {
-          attributes: { class: 'view-row children-float' },
-        },
-        height: 1/8,
-        children: [
-          {
-            options: { attributes: {class: 'column children-centered' } },
-            width: 1/2,
-            children: [
-              {
-                options: {
-                  tagName: 'button',
-                  attributes: {
-                    class: 'resume-puzzle',
-                    style: 'display: inline-block'
-                  },
-                  content: '<span>Back to Menu</span>'
-                },
-                width: 7.5/9,
-                height: 1/2,
-                //uiEvents: ['mouseup'],
-                key: 'resumePuzzleBtn'
-              }
-            ]
-          },
-          {
-            options: { attributes: {class: 'column children-centered' } },
-            width: 1/2,
-            children: [
-              {
-                options: {
-                  tagName: 'button',
-                  attributes: {
-                    class: 'new-puzzle',
-                    style: 'display: inline-block'
-                  },
-                  content: '<span>Snap Puzzle</span>'
-                },
-                width: 7.5/9,
-                height: 1/2,
-                //uiEvents: ['mouseup'],
-                key: 'newPuzzleBtn'
-              }
-            ]
-          }
-        ]*/
       },
       {
         options: {
