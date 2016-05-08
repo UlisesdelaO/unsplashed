@@ -102,95 +102,100 @@ footer.credits a {
   font-size: 15px;
   color: #fff;
 }
-.puzzle-app .view {
+.puzzle-app .relative {
   position: relative;
+}
+.puzzle-app .view {
+  
 }
 .puzzle-app .view.hidden {
   visibility: hidden;
 }
-.puzzle-app .view > * {
+
+/*.puzzle-app .view > * {
   margin: 0;
-}
-.puzzle-app .view-row {
-  background: #fff;
+}*/
+.puzzle-app .view .plaque {
+  /*background: #fff;
   /*box-shadow: 0 0 50px 0 rgba(0, 0, 0, .25);*/
 }
-.puzzle-app .view-row:nth-child(8) { background: #513b56; }
-.puzzle-app .view-row:nth-child(7) { background: #525174; }
-.puzzle-app .view-row:nth-child(6) { background: #436e8e; }
-.puzzle-app .view-row:nth-child(5) { background: #348aa7; }
-.puzzle-app .view-row:nth-child(4) { background: #49afa3; }
-.puzzle-app .view-row:nth-child(3) { background: #5dd39e; }
-.puzzle-app .view-row:nth-child(2) { background: #8ddd91; }
-.puzzle-app .view-row:nth-child(1) { background: #bce784; }
-.puzzle-app .view-row .children-centered {
+.puzzle-app .view.menu .plaque:nth-child(8) { background: #513b56; }
+.puzzle-app .view.menu .plaque:nth-child(7) { background: #525174; }
+.puzzle-app .view.menu .plaque:nth-child(6) { background: #436e8e; }
+.puzzle-app .view.menu .plaque:nth-child(5) { background: #348aa7; }
+.puzzle-app .view.menu .plaque:nth-child(4) { background: #49afa3; }
+.puzzle-app .view.menu .plaque:nth-child(3) { background: #5dd39e; }
+.puzzle-app .view.menu .plaque:nth-child(2) { background: #8ddd91; }
+.puzzle-app .view.menu .plaque:nth-child(1) { background: #bce784; }
+
+.puzzle-app .view .plaque .children-centered {
   height: 100%;
 }
-.puzzle-app .view-row svg.lnr-crop {
+.puzzle-app .view .plaque svg.lnr-crop {
   max-width: 40%;
   max-height: 40%;
 }
-.puzzle-app .view-row.header svg.lnr-crop {
+.puzzle-app .view .plaque.header svg.lnr-crop {
   transform: rotate3d(0, 0, 1, 135deg);
 }
-.puzzle-app .view-row.footer svg.lnr-crop {
+.puzzle-app .view .plaque.footer svg.lnr-crop {
   transform: rotate3d(0, 0, 1, -45deg);
 }
-.puzzle-app .view-row .logo {
+.puzzle-app .view .plaque .logo {
   font-size: 30px;
   font-weight: bold;
   text-transform: uppercase;
 }
-.puzzle-app .view-row .column.icon .children-centered svg { 
+.puzzle-app .view .plaque .column.icon .children-centered svg { 
   display: inline-block;
   position: relative;
   max-width: 50%;
   max-height: 50%;
 }
-.puzzle-app .view-row .column.text,
-.puzzle-app .view-row .column.text .children-centered {
+.puzzle-app .view .plaque .column.text,
+.puzzle-app .view .plaque .column.text .children-centered {
   text-align: left;
 }
-.puzzle-app .view-row .column.text .row-header .title {
+.puzzle-app .view .plaque .column.text .row-header .title {
   position: absolute;
   bottom: 0;
 }
-.puzzle-app .view-row button {
+.puzzle-app .view .plaque button {
   border-width: 0;
   /*box-shadow: inset 0 0 0 2px #fff;*/
   /*background: transparent;*/
   background: #FF4081;
   border-radius: 20px;
   padding: 0;
-  margin: 0;
+  margin: 0 2%;
   outline: none;
   cursor: pointer;
 }
-.puzzle-app .view-row button.inactive {
+.puzzle-app .view .plaque button.inactive {
   opacity: .5;
   cursor: default;
 }
-.puzzle-app .view-row button.resume-puzzle {
-  margin-left: 5%;
+.puzzle-app .view .plaque button.resume-puzzle {
+  /*margin-left: 5%;*/
 }
-.puzzle-app .view-row button.resume-puzzle:before {
+.puzzle-app .view .plaque button.resume-puzzle:before {
   /*content: 'Resume Puzzle';*/
 }
-.puzzle-app .view-row button.new-puzzle {
-  margin-right: 5%;
+.puzzle-app .view .plaque button.new-puzzle {
+  /*margin-right: 5%;*/
   /*background: rgba(255, 255, 255, .1);*/
 }
-.puzzle-app .view-row button.new-puzzle:before {
+.puzzle-app .view .plaque button.new-puzzle:before {
   /*content: 'New Puzzle';*/
 }
-.puzzle-app .view-row button > * {
+.puzzle-app .view .plaque button > * {
   top: 0;
 }
-.puzzle-app .view-row button span {
+.puzzle-app .view .plaque button span {
   line-height: 40px;
   vertical-align: middle;
 }
-.puzzle-app .view-row button span svg {
+.puzzle-app .view .plaque button span svg {
   max-width: 25px;
   max-height: 25px;
   vertical-align: middle;

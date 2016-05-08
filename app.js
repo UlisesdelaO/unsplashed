@@ -13,7 +13,7 @@ var FamousEngine = famous.core.FamousEngine,
     Rotation = famous.components.Rotation,
     Scale = famous.components.Scale,
     //Size = famous.components.Size,
-    GestureHandler = famous.components.GestureHandler,
+    //GestureHandler = famous.components.GestureHandler,
     DOMElement = famous.domRenderables.DOMElement;
 
 
@@ -21,14 +21,17 @@ var FamousEngine = famous.core.FamousEngine,
 
 function PuzzleApp(contextSize) {
   Node.call(this);
-  this.el = new DOMElement(this, { attributes: { class: 'puzzle-app' } });
-  this.views = {
+  this.el = new DOMElement(this, { classes: ['puzzle-app'] });
+  
+  this.menu = this.addChild(new Menu());
+
+  /*this.views = {
     home: this.addChild(new ViewItem(this, this.getHomeViewTree())),
     puzzle: {}
-  };
+  };*/
   
   // To be moved to the bind puzzle app events, probably
-  var rootNode = this;
+  /*var rootNode = this;
   this.views.home.addComponent({
     onMount: function(node) {
       rootNode.resumePuzzleBtn.addComponent({
@@ -49,7 +52,7 @@ function PuzzleApp(contextSize) {
         }
       });
     }
-  });
+  });*/
 
   this.roundData = {
     counter: 1,
@@ -69,37 +72,79 @@ PuzzleApp.prototype = Object.create(Node.prototype);
 
 function Menu() {
   Node.call(this);
-  this.el = new DOMElement(this, { classes: ['home', 'view'] });
+  this.el = new DOMElement(this, { classes: ['menu', 'view'] });
   this.plaques = [
-    this.addChild(new Plaque([{ icon: 'crop' }]),
-    this.addChild(new Plaque([{ rows: [{ class: 'logo', text: 'Unsplashed'}] }])),
-    this.addChild(new Plaque([
+    this.addChild(new Plaque(1/8, [{ icon: 'crop' }])),
+    this.addChild(new Plaque(1/8, [{ rows: [{ class: 'logo', text: 'Unsplashed'  }]}])),
+    this.addChild(new Plaque(1/8, [
       { icon: 'redo'},
       { rows: [{ text: 'Tap pieces to rotate them 90 degrees clockwise' }] }
     ])),
-    this.addChild(new Plaque([
+    this.addChild(new Plaque(1/8, [
       { icon: 'move'},
       { rows: [{ text: 'Drag and drop pieces to swap their positions' }] }
     ])),
-    this.addChild(new Plaque([
+    this.addChild(new Plaque(1/8, [
       { icon: 'hourglass'},
       { rows: [{ text: 'Beware of the moves counter, moves are not unlimited' }] }
     ])),
-    this.addChild(new Plaque([
-      { icon: 'pie-chart'},
-      { rows: [
-        { text: 'Win Stats' },
-        { tex: '&mdash;', key: 'winStatsNode' }
-      ] },
-      { rows: [
-        { text: 'Loss Stats' },
-        { tex: '&mdash;', key: 'lossStatsNode' }
-      ] }
-    ])),
-
+    this.addChild(new Plaque(1/8, {
+      visible: [
+        { icon: 'pie-chart'},
+        { rows: [
+          { text: 'Win Stats' },
+          { tex: '&mdash;', key: 'winStatsNode' }
+        ]},
+        { rows: [
+          { text: 'Loss Stats' },
+          { tex: '&mdash;', key: 'lossStatsNode' }
+        ]}
+      ],
+      hidden: { 
+        columns: [
+          { rows: [{ text: 'Paused puzzle will be discarded and counted as a loss. Continue?' }] }
+        ],
+        key: 'lossConfirmText'
+      }
+    })),
+    this.addChild(new Plaque(1/8, {
+      visible: [
+        { button: { text: 'Resume Puzzle' }, key: 'resumePuzzleBtn' },
+        { button: { text: 'New Puzzle' }, key: 'newPuzzleBtn' },
+      ],
+      hidden: {
+        columns: [
+          { button: { text: 'Yes' }, key: 'lossConfirmYesBtn' },
+          { button: { text: 'No' }, key: 'lossConfirmNoBtn' },
+        ],
+        key: 'lossConfirmButtons'
+      }
+    })),
+    this.addChild(new Plaque(1/8, [{ icon: 'crop' }]))
   ];
 }
 Menu.prototype = Object.create(Node.prototype);
+
+
+
+function Plaque(height, columns) {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
+  this.setProportionalSize(1, height);
+  var visibleCols = (columns.constructor === Array) ? columns : columns.visible;
+  if (visibleCols.length === 1) {
+
+  }
+  for (var i = 0; i < visibleCols.length; i++) {
+    //visibleCols[i].
+  }
+  
+
+}
+Plaque.prototype = Object.create(Node.prototype);
+
+
+
 
 PuzzleApp.prototype.getHomeViewTree = function () {
   return {
@@ -235,50 +280,28 @@ PuzzleApp.prototype.getHomeViewTree = function () {
         ]
       },
       {
-        options: {
-          attributes: { class: 'view-row children-float' },
-        },
+        options: { attributes: { class: 'view-row children-centered' } },
         height: 1/8,
         children: [
           {
-            options: { attributes: {class: 'column children-centered' } },
-            width: 1/2,
-            children: [
-              {
-                options: {
-                  tagName: 'button',
-                  attributes: {
-                    class: 'resume-puzzle',
-                    style: 'display: inline-block'
-                  },
-                  content: '<span>Resume Puzzle</span>'
-                },
-                width: 7.5/9,
-                height: 1/2,
-                //uiEvents: ['mouseup'],
-                key: 'resumePuzzleBtn'
-              }
-            ]
+            options: {
+              tagName: 'button',
+              attributes: { class: 'resume-puzzle', style: 'display:inline-block' },
+              content: '<span>Resume Puzzle</span>'
+            },
+            width: 17/40,
+            height: 1/2,
+            key: 'resumePuzzleBtn'
           },
           {
-            options: { attributes: {class: 'column children-centered' } },
-            width: 1/2,
-            children: [
-              {
-                options: {
-                  tagName: 'button',
-                  attributes: {
-                    class: 'new-puzzle',
-                    style: 'display: inline-block'
-                  },
-                  content: '<span>New Puzzle</span>'
-                },
-                width: 7.5/9,
-                height: 1/2,
-                //uiEvents: ['mouseup'],
-                key: 'newPuzzleBtn'
-              }
-            ]
+            options: {
+              tagName: 'button',
+              attributes: { class: 'new-puzzle', style: 'display:inline-block' },
+              content: '<span>New Puzzle</span>'
+            },
+            width: 17/40,
+            height: 1/2,
+            key: 'newPuzzleBtn'
           }
         ]
       },
