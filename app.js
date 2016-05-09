@@ -74,75 +74,112 @@ function Menu() {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['menu', 'view'] });
   this.plaques = [
-    this.addChild(new Plaque(1/8, [{ icon: 'crop' }])),
-    this.addChild(new Plaque(1/8, [{ rows: [{ class: 'logo', text: 'Unsplashed'  }]}])),
+    this.addChild(new Plaque(1/8, { icon: 'crop' })),
+    this.addChild(new Plaque(1/8, { text: 'Unsplashed', class: 'logo' })),
     this.addChild(new Plaque(1/8, [
-      { icon: 'redo'},
-      { rows: [{ text: 'Tap pieces to rotate them 90 degrees clockwise' }] }
+      { icon: 'redo', width: 2/9 },
+      { text: 'Tap pieces to rotate them 90 degrees clockwise', width: 6.6/9 }
     ])),
     this.addChild(new Plaque(1/8, [
-      { icon: 'move'},
-      { rows: [{ text: 'Drag and drop pieces to swap their positions' }] }
+      { icon: 'move', width: 2/9 },
+      { text: 'Drag and drop pieces to swap their positions', width: 6.6/9 }
     ])),
     this.addChild(new Plaque(1/8, [
-      { icon: 'hourglass'},
-      { rows: [{ text: 'Beware of the moves counter, moves are not unlimited' }] }
+      { icon: 'hourglass', width: 2/9 },
+      { text: 'Beware of the moves counter, moves are not unlimited', width: 6.6/9 }
     ])),
     this.addChild(new Plaque(1/8, {
-      visible: [
-        { icon: 'pie-chart'},
-        { rows: [
-          { text: 'Win Stats' },
-          { tex: '&mdash;', key: 'winStatsNode' }
-        ]},
-        { rows: [
-          { text: 'Loss Stats' },
-          { tex: '&mdash;', key: 'lossStatsNode' }
-        ]}
+      main: [
+        { icon: 'pie-chart', width: 2/9 },
+        { rows: [{ text: 'Win Stats' }, { tex: '&mdash;', key: 'winStatsNode' }], width: 3.3/9 },
+        { rows: [{ text: 'Loss Stats' }, { tex: '&mdash;', key: 'lossStatsNode' }], width: 3.3/9 }
       ],
-      hidden: { 
-        columns: [
-          { rows: [{ text: 'Paused puzzle will be discarded and counted as a loss. Continue?' }] }
-        ],
-        key: 'lossConfirmText'
-      }
+      onflip: { text: 'Paused puzzle will be discarded and counted as a loss. Continue?' }
     })),
     this.addChild(new Plaque(1/8, {
-      visible: [
-        { button: { text: 'Resume Puzzle' }, key: 'resumePuzzleBtn' },
-        { button: { text: 'New Puzzle' }, key: 'newPuzzleBtn' },
-      ],
-      hidden: {
-        columns: [
-          { button: { text: 'Yes' }, key: 'lossConfirmYesBtn' },
-          { button: { text: 'No' }, key: 'lossConfirmNoBtn' },
-        ],
-        key: 'lossConfirmButtons'
-      }
+      main: { buttons: [
+        { text: 'Resume Puzzle', key: 'resumePuzzleBtn', width: 17/40 },
+        { text: 'New Puzzle', key: 'newPuzzleBtn', width: 17/40 },
+      ]},
+      onflip: { buttons: [
+        { text: 'Yes', key: 'lossConfirmYesBtn', width: 17/40 },
+        { text: 'No', key: 'lossConfirmNoBtn', width: 17/40 },
+      ]}
     })),
-    this.addChild(new Plaque(1/8, [{ icon: 'crop' }]))
+    this.addChild(new Plaque(1/8, { icon: 'crop' }))
   ];
 }
 Menu.prototype = Object.create(Node.prototype);
 
-
-
-function Plaque(height, columns) {
+function Plaque(height, contents) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
   this.setProportionalSize(1, height);
-  var visibleCols = (columns.constructor === Array) ? columns : columns.visible;
-  if (visibleCols.length === 1) {
-
-  }
-  for (var i = 0; i < visibleCols.length; i++) {
-    //visibleCols[i].
-  }
   
+  var mainContents = contents.main ? contents.main : contents,
+      onflipContents = contents.onflip;
 
+  var setupElements = function (contentSet, container) {
+    if (contentSet.constructor === Array) {
+      container.el.addClass('children-float');
+      for (var i = 0; i < contentSet.length; i++) {
+        var column = container.addChild(),
+            width = contentSet[i].width || 1;
+        column.el = new DOMElement(column, { classes: ['column', 'relative'] });
+        column.setProportionalSize(width, 1);
+        if (contentSet[i].rows) {
+          for (var j = 0; j < contentSet[i].rows.length; j++) {
+            var row = column.addChild();
+            row.el = new DOMElement(row, { classes: ['relative'] });
+            row.setProportionalSize(1, 1/contentSet[i].rows.length);
+            row.addChild(new Content(contentSet[i].rows[j]));
+          }
+        } else {
+          column.addChild(new Content(contentSet[i]));
+        }
+      }
+    } else if (contentSet.buttons) {
+      container.el.addClass('children-centered');
+      for (var i = 0; i < contentSet.buttons.length; i++) {
+        container.addChild(new Button(contentSet.buttons[i]));
+      }
+    } else {
+      container.addChild(new Content(contentSet));
+    }
+  };
+
+  setupElements(mainContents, this);
+
+  if (onflipContents) {
+    this.onflipContainer = this.addChild();
+    this.onflipContainer.el = new DOMElement(this, { classes: ['on-flip'] });
+    setupElements(onflipContents, this.onflipContainer);
+  }
 }
 Plaque.prototype = Object.create(Node.prototype);
 
+function Content(details) {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['relative', 'children-centered'] });
+  if (details.icon) {
+    this.el.setContent('<div class="children-centered"><!-- svg markup --></div>');
+  } else if (details.text) {
+    this.el.setContent('<div class="children-centered"><span>' + details.text + '</span></div>');
+  }
+}
+Content.prototype = Object.create(Node.prototype);
+
+function Button(details) {
+  Node.call(this);
+  this.el = new DOMElement(this, {
+    tagName: 'button',
+    attributes: { style: 'display:inline-block' },
+    content: '<span>' + details.text + '</span>'
+  });
+  this.setSizeMode('relative', 'render');
+  this.setProportionalSize(details.width, 1);
+}
+Button.prototype = Object.create(Node.prototype);
 
 
 
