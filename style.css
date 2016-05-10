@@ -105,65 +105,65 @@ footer.credits a {
 .puzzle-app .relative {
   position: relative;
 }
-.puzzle-app .view {
-  
-}
 .puzzle-app .view.hidden {
   visibility: hidden;
 }
 
-/*.puzzle-app .view > * {
-  margin: 0;
-}*/
-.puzzle-app .view .plaque {
-  /*background: #fff;
-  /*box-shadow: 0 0 50px 0 rgba(0, 0, 0, .25);*/
-}
-.puzzle-app .view.menu .plaque:nth-child(8) { background: #513b56; }
-.puzzle-app .view.menu .plaque:nth-child(7) { background: #525174; }
-.puzzle-app .view.menu .plaque:nth-child(6) { background: #436e8e; }
-.puzzle-app .view.menu .plaque:nth-child(5) { background: #348aa7; }
-.puzzle-app .view.menu .plaque:nth-child(4) { background: #49afa3; }
-.puzzle-app .view.menu .plaque:nth-child(3) { background: #5dd39e; }
-.puzzle-app .view.menu .plaque:nth-child(2) { background: #8ddd91; }
 .puzzle-app .view.menu .plaque:nth-child(1) { background: #bce784; }
+.puzzle-app .view.menu .plaque:nth-child(2) { background: #8ddd91; }
+.puzzle-app .view.menu .plaque:nth-child(3) { background: #5dd39e; }
+.puzzle-app .view.menu .plaque:nth-child(4) { background: #49afa3; }
+.puzzle-app .view.menu .plaque:nth-child(5) { background: #348aa7; }
+.puzzle-app .view.menu .plaque:nth-child(6) { background: #436e8e; }
+.puzzle-app .view.menu .plaque:nth-child(7) { background: #525174; }
+.puzzle-app .view.menu .plaque:nth-child(8) { background: #513b56; }
+
+.puzzle-app .view.puzzle .plaque:nth-child(1) { background: #348AA7; }
+.puzzle-app .view.puzzle .plaque:nth-child(2) { background: #3B7A96; }
+.puzzle-app .view.puzzle .plaque:nth-child(3) { background: #416986; }
+.puzzle-app .view.puzzle .plaque:nth-child(4) { background: #485975; }
+.puzzle-app .view.puzzle .plaque:nth-child(5) { background: #4E4864; }
+
+.puzzle-app .view.menu .plaque:first-child svg,
+.puzzle-app .view.menu .plaque:last-child svg { max-height: 40%; }
+
+
 
 .puzzle-app .view .plaque .children-centered {
   height: 100%;
 }
-.puzzle-app .view .plaque svg.lnr-crop {
-  max-width: 40%;
-  max-height: 40%;
-}
-.puzzle-app .view .plaque.header svg.lnr-crop {
-  transform: rotate3d(0, 0, 1, 135deg);
-}
-.puzzle-app .view .plaque.footer svg.lnr-crop {
-  transform: rotate3d(0, 0, 1, -45deg);
-}
-.puzzle-app .view .plaque .logo {
-  font-size: 30px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-.puzzle-app .view .plaque .column.icon .children-centered svg { 
+
+.puzzle-app .view .plaque .column svg { 
   display: inline-block;
   position: relative;
   max-width: 50%;
   max-height: 50%;
 }
-.puzzle-app .view .plaque .column.text,
-.puzzle-app .view .plaque .column.text .children-centered {
+.puzzle-app .view .plaque .column .text {
   text-align: left;
+  width: 100%;
 }
-.puzzle-app .view .plaque .column.text .row-header .title {
-  position: absolute;
-  bottom: 0;
+.puzzle-app .view .plaque .column .text.align-right {
+  text-align: right;
+}
+.puzzle-app .view .plaque .column .text.heading {
+  font-size: 35px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.puzzle-app .view .plaque .column .text.indented {
+  text-indent: 15px;
+}
+.puzzle-app .view .plaque .column .row:first-child .children-centered > *,
+.puzzle-app .view .plaque .column .row:first-child .children-centered:after {
+  vertical-align: bottom;
+}
+.puzzle-app .view .plaque .column .row:last-child .children-centered > *,
+.puzzle-app .view .plaque .column .row:last-child .children-centered:after {
+  vertical-align: top;
 }
 .puzzle-app .view .plaque button {
   border-width: 0;
-  /*box-shadow: inset 0 0 0 2px #fff;*/
-  /*background: transparent;*/
   background: #FF4081;
   border-radius: 20px;
   padding: 0;
@@ -175,19 +175,6 @@ footer.credits a {
   opacity: .5;
   cursor: default;
 }
-.puzzle-app .view .plaque button.resume-puzzle {
-  /*margin-left: 5%;*/
-}
-.puzzle-app .view .plaque button.resume-puzzle:before {
-  /*content: 'Resume Puzzle';*/
-}
-.puzzle-app .view .plaque button.new-puzzle {
-  /*margin-right: 5%;*/
-  /*background: rgba(255, 255, 255, .1);*/
-}
-.puzzle-app .view .plaque button.new-puzzle:before {
-  /*content: 'New Puzzle';*/
-}
 .puzzle-app .view .plaque button > * {
   top: 0;
 }
@@ -195,11 +182,12 @@ footer.credits a {
   line-height: 40px;
   vertical-align: middle;
 }
-.puzzle-app .view .plaque button span svg {
-  max-width: 25px;
-  max-height: 25px;
-  vertical-align: middle;
+.puzzle-app .view .plaque .on-flip {
+  visibility: hidden;
+  background: #455A64;
+  top: 0;
 }
+
 
 
 .board {
