@@ -94,7 +94,6 @@ footer.credits a {
 
 .puzzle-app {
   position: relative;
-  background: #fff;
   color: #fff;
 }
 .puzzle-app, .puzzle-app button {
@@ -107,6 +106,9 @@ footer.credits a {
 }
 .puzzle-app .view.hidden {
   visibility: hidden;
+}
+.puzzle-app .view .plaque {
+  backface-visibility: hidden;
 }
 
 .puzzle-app .view.menu .plaque:nth-child(1) { background: #bce784; }

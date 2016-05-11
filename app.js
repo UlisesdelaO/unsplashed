@@ -8,6 +8,7 @@
 // Famous dependencies
 
 var FamousEngine = famous.core.FamousEngine,
+    Camera = famous.components.Camera,
     Node = famous.core.Node,
     Position = famous.components.Position,
     Rotation = famous.components.Rotation,
@@ -75,9 +76,13 @@ function PuzzleApp(contextSize) {
 PuzzleApp.prototype = Object.create(Node.prototype);
 
 
+function ViewAnimation() {
+  
+}
+
 function Puzzle() {
   Node.call(this);
-  this.el = new DOMElement(this, { classes: ['puzzle', 'view'] });
+  this.el = new DOMElement(this, { classes: ['puzzle', 'view', 'hidden'] });
   this.plaques = [
     this.addChild(new Plaque(1/16, null)),
     this.addChild(new Plaque(2.5/16, { buttons: [
@@ -96,7 +101,15 @@ Puzzle.prototype = Object.create(Node.prototype);
 
 function Menu() {
   Node.call(this);
-  this.el = new DOMElement(this, { classes: ['menu', 'view', 'hidden'] });
+  this.el = new DOMElement(this, { classes: ['menu', 'view'] });
+  
+  // _centerNode.call(this);
+  this.setAlign(0.5, 0.5);
+  this.setMountPoint(0.5, 0.5)
+  this.setOrigin(0.5, 0.5);
+
+  this.setScale(.85, .85);
+
   this.plaques = [
     this.addChild(new Plaque(1/8, { icon: 'crop' })),
     this.addChild(new Plaque(1/8, { text: 'Unsplashed', class: 'heading' })),
@@ -135,10 +148,22 @@ function Menu() {
 }
 Menu.prototype = Object.create(Node.prototype);
 
+Menu.prototype.flipIn = function() {
+
+}
+
 function Plaque(height, contents) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
+
+  // _centerNode.call(this);
+  //this.setAlign(0, -0.5);
+  //this.setMountPoint(0, 1)
+  this.setOrigin(0.5, 0.5);
+  //this.setPosition(0, 0, -80);
+
   this.setProportionalSize(1, height);
+  this.setRotation(Math.PI / 2, 0);
   
   var mainContents = (contents && contents.main) ? contents.main : contents,
       onflipContents = (contents && contents.onflip) ? contents.onflip : null;
@@ -531,7 +556,11 @@ function _randomIntBetween(minInt, maxInt) {
 function initAppOn(sceneSelector) {
   FamousEngine.init();
   var puzzleApp,
-      puzzleAppScene = FamousEngine.createScene(sceneSelector);
+      puzzleAppScene = FamousEngine.createScene(sceneSelector),
+      puzzleAppCamera = new Camera(puzzleAppScene);
+  
+  puzzleAppCamera.setDepth(500);
+
   puzzleAppScene.addComponent({
     onReceive: function (e, payload) {
       if (e === 'CONTEXT_RESIZE') {
