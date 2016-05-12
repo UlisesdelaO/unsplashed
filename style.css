@@ -134,7 +134,11 @@ footer.credits a {
 .puzzle-app .view .plaque .children-centered {
   height: 100%;
 }
-
+.puzzle-app .view .plaque .text.heading {
+  font-size: 35px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
 .puzzle-app .view .plaque .column svg { 
   display: inline-block;
   position: relative;
@@ -144,14 +148,10 @@ footer.credits a {
 .puzzle-app .view .plaque .column .text {
   text-align: left;
   width: 100%;
+  -webkit-backface-visibility: hidden;
 }
 .puzzle-app .view .plaque .column .text.align-right {
   text-align: right;
-}
-.puzzle-app .view .plaque .column .text.heading {
-  font-size: 35px;
-  font-weight: bold;
-  text-transform: uppercase;
 }
 .puzzle-app .view .plaque .column .text.indented {
   text-indent: 15px;
@@ -172,6 +172,7 @@ footer.credits a {
   margin: 0 2%;
   outline: none;
   cursor: pointer;
+  backface-visibility: hidden;
 }
 .puzzle-app .view .plaque button.inactive {
   opacity: .5;

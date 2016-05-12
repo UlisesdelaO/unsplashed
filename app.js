@@ -22,6 +22,8 @@ function PuzzleApp(contextSize) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['puzzle-app'] });
   
+  var rootNode = this;
+
   // Menu Elements
   this.menu = this.addChild(new Menu());
   this.winStatsNode = this.menu.plaques[5].columns[1].rows[1].content;
@@ -57,7 +59,7 @@ function PuzzleApp(contextSize) {
     },
     onReceive: function(e, payload) {
       if (e === 'click') {
-        console.log('new puzzle button clicked!!');
+        node.transitionTo(rootNode.puzzle);
       }
     }
   });
@@ -76,13 +78,44 @@ function PuzzleApp(contextSize) {
 PuzzleApp.prototype = Object.create(Node.prototype);
 
 
-function ViewAnimation() {
-  
+function View() {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['view'] });
+  this.plaques  = [];
+  this.scaleTweener = new Scale(this);
+
+  this.scaleTweener.set(.85, .85, 1);
+  this.setAlign(0.5, 0.5);
+  this.setMountPoint(0.5, 0.5);
+  this.setOrigin(0.5, 0.5);
+}
+View.prototype = Object.create(Node.prototype);
+
+View.prototype.transitionTo = function(otherView) {
+  this.rotatePlaques(Math.PI, 'easeIn');
+}
+
+View.prototype.rotatePlaques = function(xAngle, easing) {
+  var tweenDuration = 900;
+  this.scaleTweener.set(1, 1, 1, {
+    duration: tweenDuration,
+    curve: easing
+  }, function() {
+    // on complete do something else, maybe...
+  });
+  for (var i = 0; i < this.plaques.length; i++) {
+    var rotationTweener = new Rotation(this.plaques[i]);
+    rotationTweener.set(xAngle, 0, 0, {
+      duration: tweenDuration,
+      curve: easing
+    });
+  }
 }
 
 function Puzzle() {
-  Node.call(this);
-  this.el = new DOMElement(this, { classes: ['puzzle', 'view', 'hidden'] });
+  View.call(this);
+  this
+  this.el.addClass('puzzle').addClass('hidden');
   this.plaques = [
     this.addChild(new Plaque(1/16, null)),
     this.addChild(new Plaque(2.5/16, { buttons: [
@@ -97,19 +130,11 @@ function Puzzle() {
     this.addChild(new Plaque(1/16, null))
   ];
 }
-Puzzle.prototype = Object.create(Node.prototype);
+Puzzle.prototype = Object.create(View.prototype);
 
 function Menu() {
-  Node.call(this);
-  this.el = new DOMElement(this, { classes: ['menu', 'view'] });
-  
-  // _centerNode.call(this);
-  this.setAlign(0.5, 0.5);
-  this.setMountPoint(0.5, 0.5)
-  this.setOrigin(0.5, 0.5);
-
-  this.setScale(.85, .85);
-
+  View.call(this);
+  this.el.addClass('menu');
   this.plaques = [
     this.addChild(new Plaque(1/8, { icon: 'crop' })),
     this.addChild(new Plaque(1/8, { text: 'Unsplashed', class: 'heading' })),
@@ -145,25 +170,16 @@ function Menu() {
     })),
     this.addChild(new Plaque(1/8, { icon: 'crop' }))
   ];
+  this.rotatePlaques(0, 'easeOut');
 }
-Menu.prototype = Object.create(Node.prototype);
-
-Menu.prototype.flipIn = function() {
-
-}
+Menu.prototype = Object.create(View.prototype);
 
 function Plaque(height, contents) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
-
-  // _centerNode.call(this);
-  //this.setAlign(0, -0.5);
-  //this.setMountPoint(0, 1)
   this.setOrigin(0.5, 0.5);
-  //this.setPosition(0, 0, -80);
-
+  this.setRotation(Math.PI, 0, 0);
   this.setProportionalSize(1, height);
-  this.setRotation(Math.PI / 2, 0);
   
   var mainContents = (contents && contents.main) ? contents.main : contents,
       onflipContents = (contents && contents.onflip) ? contents.onflip : null;
@@ -252,6 +268,9 @@ function Button(details) {
   }
 }
 Button.prototype = Object.create(Node.prototype);
+
+
+// UNTOUCHED CODE STARTS HERE //
 
 
 PuzzleApp.prototype.resizeChildren = function (contextSize)  {
