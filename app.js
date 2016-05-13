@@ -53,13 +53,25 @@ function PuzzleApp(contextSize) {
       node.el.addClass('inactive');
     }
   });
+  
+  this.backBtn.addComponent({
+    onMount: function(node) {
+      node.addUIEvent('click');
+    },
+    onReceive: function(e, payload) {
+      if (e === 'click') {
+        rootNode.puzzle.transitionTo(rootNode.menu);
+      }
+    }
+  });
+
   this.newPuzzleBtn.addComponent({
     onMount: function(node) {
       node.addUIEvent('click');
     },
     onReceive: function(e, payload) {
       if (e === 'click') {
-        node.transitionTo(rootNode.puzzle);
+        rootNode.menu.transitionTo(rootNode.puzzle);
       }
     }
   });
@@ -81,31 +93,50 @@ PuzzleApp.prototype = Object.create(Node.prototype);
 function View() {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['view'] });
-  this.plaques  = [];
+  this.plaques = [];
   this.scaleTweener = new Scale(this);
 
-  this.scaleTweener.set(.85, .85, 1);
+  this.scaleTweener.set(.75, .75, 1);
   this.setAlign(0.5, 0.5);
   this.setMountPoint(0.5, 0.5);
   this.setOrigin(0.5, 0.5);
 }
 View.prototype = Object.create(Node.prototype);
 
-View.prototype.transitionTo = function(otherView) {
-  this.rotatePlaques(Math.PI, 'easeIn');
+View.prototype.resetPlaquesRotation = function() {
+  for (var i = 0; i < this.plaques.length; i++) {
+    var rotationTweener = new Rotation(this.plaques[i]);
+    rotationTweener.set(-Math.PI, 0, 0);
+  }
 }
 
-View.prototype.rotatePlaques = function(xAngle, easing) {
-  var tweenDuration = 900;
-  this.scaleTweener.set(1, 1, 1, {
+View.prototype.transitionIn = function() {
+  this.animatePlaques(1, 0, 'easeOut');
+}
+
+View.prototype.transitionTo = function(otherView) {
+  var thisView = this;
+  this.animatePlaques(.75, Math.PI, 'inCirc', function() {
+    thisView.el.addClass('hidden');
+    thisView.resetPlaquesRotation();
+    otherView.el.removeClass('hidden');
+    otherView.animatePlaques(1, 0, 'outCirc');
+  });
+}
+
+View.prototype.animatePlaques = function(scaleXY, rotationX, easing, onCompleteFn) {
+  var tweenDuration = 600;
+  
+  this.scaleTweener.set(scaleXY, scaleXY, 1, {
     duration: tweenDuration,
     curve: easing
   }, function() {
-    // on complete do something else, maybe...
+    try { onCompleteFn(); } catch(e) {}
   });
+  
   for (var i = 0; i < this.plaques.length; i++) {
     var rotationTweener = new Rotation(this.plaques[i]);
-    rotationTweener.set(xAngle, 0, 0, {
+    rotationTweener.set(rotationX, 0, 0, {
       duration: tweenDuration,
       curve: easing
     });
@@ -114,7 +145,6 @@ View.prototype.rotatePlaques = function(xAngle, easing) {
 
 function Puzzle() {
   View.call(this);
-  this
   this.el.addClass('puzzle').addClass('hidden');
   this.plaques = [
     this.addChild(new Plaque(1/16, null)),
@@ -170,7 +200,7 @@ function Menu() {
     })),
     this.addChild(new Plaque(1/8, { icon: 'crop' }))
   ];
-  this.rotatePlaques(0, 'easeOut');
+  this.transitionIn();
 }
 Menu.prototype = Object.create(View.prototype);
 
@@ -178,7 +208,7 @@ function Plaque(height, contents) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
   this.setOrigin(0.5, 0.5);
-  this.setRotation(Math.PI, 0, 0);
+  this.setRotation(-Math.PI, 0, 0);
   this.setProportionalSize(1, height);
   
   var mainContents = (contents && contents.main) ? contents.main : contents,
