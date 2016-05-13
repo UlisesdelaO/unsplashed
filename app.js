@@ -24,6 +24,8 @@ function PuzzleApp(contextSize) {
   
   var rootNode = this;
 
+  this.contextSize = contextSize;
+
   // Menu Elements
   this.menu = this.addChild(new Menu());
   this.winStatsNode = this.menu.plaques[5].columns[1].rows[1].content;
@@ -70,9 +72,7 @@ function PuzzleApp(contextSize) {
       node.addUIEvent('click');
     },
     onReceive: function(e, payload) {
-      if (e === 'click') {
-        rootNode.menu.transitionTo(rootNode.puzzle);
-      }
+      if (e === 'click') { rootNode.newGame(); }
     }
   });
 
@@ -88,6 +88,11 @@ function PuzzleApp(contextSize) {
 }
 
 PuzzleApp.prototype = Object.create(Node.prototype);
+
+PuzzleApp.prototype.newGame = function() {
+  this.puzzle.board = this.puzzle.plaques[2].addChild(new Board(3, this.contextSize[0]));
+  this.menu.transitionTo(this.puzzle);
+}
 
 
 function View() {
@@ -412,11 +417,12 @@ function _bindPuzzleAppEvents() {
 
 // Board Module
 
-function Board(piecesPerRow) {
+function Board(piecesPerRow, contextWidth) {
   Node.call(this);
   _centerNode.call(this);
   
   this.piecesPerRow = piecesPerRow;
+  this.contextWidth = contextWidth;
   this.el = new DOMElement(this, {tagName: 'board'});
   
 
@@ -425,10 +431,10 @@ function Board(piecesPerRow) {
 
 Board.prototype = Object.create(Node.prototype);
 
-Board.prototype.resizeChildren = function (boardWidth) {
-  this.setAbsoluteSize(boardWidth, boardWidth);
+Board.prototype.adaptToContext = function () {
+  this.setAbsoluteSize(this.contextWidth, this.contextWidth);
   for (var i = 0; i < this.pieces.length; i++) {
-    this.pieces[i].repositionNode(boardWidth);
+    this.pieces[i].repositionNode(this.contextWidth);
   }
 }
 
@@ -448,6 +454,7 @@ Board.prototype.setupRound = function (piecesPerRow) {
       })));
     }
   }
+  this.adaptToContext();
 }
 
 
@@ -608,7 +615,7 @@ function initAppOn(sceneSelector) {
       puzzleAppScene = FamousEngine.createScene(sceneSelector),
       puzzleAppCamera = new Camera(puzzleAppScene);
   
-  puzzleAppCamera.setDepth(500);
+  puzzleAppCamera.setDepth(1500);
 
   puzzleAppScene.addComponent({
     onReceive: function (e, payload) {
