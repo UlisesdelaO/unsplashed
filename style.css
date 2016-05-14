@@ -191,30 +191,42 @@ footer.credits a {
   background: #455A64;
   top: 0;
 }
-
-
-
-.board {
-  background-color: white;
+.puzzle-app .view .plaque .board.loading:before {
+  content: '\0020';
+  display: block;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  left: 50%;
+  top: 50%;
+  box-shadow: inset 0 0 0 3px #fff;
+  animation-name: rotate;
+  animation-duration: .5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
-.piece {
+@keyframes rotate {
+  0% { transform: rotateX(0, 0, 1, 0deg); }
+  50% { transform: rotate3d(0, 0, 1, 90deg); }
+  100% { transform: rotate3d(0, 0, 1, 90deg); }
+}
+.puzzle-app .view .plaque .board .piece {
   z-index: 2 !important;
   cursor: pointer;
   background-repeat: no-repeat;
-  background-color: white;
-  position: relative;
-  -webkit-transition: box-shadow 100ms;
   transition: box-shadow 100ms;
+  backface-visibility: hidden;
 }
-.piece:hover {
+.puzzle-app .view .plaque .board .piece:hover {
   /* To be removed on mobile app version  */
   z-index: 3 !important;
   box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.8);
 }
-.piece.in-motion {
+.puzzle-app .view .plaque .board .piece.in-motion {
   z-index: 4 !important;
   box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.8);
 }
-.piece.to-swap {
+.puzzle-app .view .plaque .board .piece.to-swap {
   z-index: 1 !important;
 }

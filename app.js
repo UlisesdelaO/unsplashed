@@ -34,7 +34,7 @@ function PuzzleApp(contextSize) {
   this.newPuzzleBtn = this.menu.plaques[6].buttons[1];
   
   // Puzzle Elements
-  this.puzzle = this.addChild(new Puzzle());
+  this.puzzle = this.addChild(new Puzzle(contextSize[0]));
   this.backBtn = this.puzzle.plaques[1].buttons[0];
   this.snapBtn = this.puzzle.plaques[1].buttons[1];
   this.movesCounter = this.puzzle.plaques[3].columns[1].content;
@@ -55,7 +55,14 @@ function PuzzleApp(contextSize) {
       node.el.addClass('inactive');
     }
   });
-  
+  this.newPuzzleBtn.addComponent({
+    onMount: function(node) {
+      node.addUIEvent('click');
+    },
+    onReceive: function(e, payload) {
+      if (e === 'click') { rootNode.newGame(); }
+    }
+  });
   this.backBtn.addComponent({
     onMount: function(node) {
       node.addUIEvent('click');
@@ -66,32 +73,24 @@ function PuzzleApp(contextSize) {
       }
     }
   });
+  try {
+    this.movesCounter.addComponent({
+      onMount: function(node) {
+        node.setContent({ text: '36' });
+      }
+    });
+  } catch(e) {}
 
-  this.newPuzzleBtn.addComponent({
-    onMount: function(node) {
-      node.addUIEvent('click');
-    },
-    onReceive: function(e, payload) {
-      if (e === 'click') { rootNode.newGame(); }
-    }
-  });
-
-  this.roundData = {
-    counter: 1,
-    piecesPerRow: 4//_randomIntBetween(2, 4)
-  };
-  
-  //this.board = this.addChild(new Board(this.roundData.piecesPerRow));
-  this.boardMaxWidth = 1080;
-  this.resizeChildren(contextSize);
-  //_bindPuzzleAppEvents.call(this);
+  _bindPuzzleAppEvents.call(this);
 }
 
 PuzzleApp.prototype = Object.create(Node.prototype);
 
 PuzzleApp.prototype.newGame = function() {
-  this.puzzle.board = this.puzzle.plaques[2].addChild(new Board(3, this.contextSize[0]));
-  this.menu.transitionTo(this.puzzle);
+  var rootNode = this;
+  this.menu.transitionTo(this.puzzle, function() {
+    rootNode.puzzle.newImage();
+  });
 }
 
 
@@ -119,13 +118,13 @@ View.prototype.transitionIn = function() {
   this.animatePlaques(1, 0, 'easeOut');
 }
 
-View.prototype.transitionTo = function(otherView) {
+View.prototype.transitionTo = function(otherView, onCompleteFn) {
   var thisView = this;
   this.animatePlaques(.75, Math.PI, 'inCirc', function() {
     thisView.el.addClass('hidden');
     thisView.resetPlaquesRotation();
     otherView.el.removeClass('hidden');
-    otherView.animatePlaques(1, 0, 'outCirc');
+    otherView.animatePlaques(1, 0, 'outCirc', onCompleteFn);
   });
 }
 
@@ -148,7 +147,9 @@ View.prototype.animatePlaques = function(scaleXY, rotationX, easing, onCompleteF
   }
 }
 
-function Puzzle() {
+
+
+function Puzzle(contextWidth) {
   View.call(this);
   this.el.addClass('puzzle').addClass('hidden');
   this.plaques = [
@@ -157,15 +158,34 @@ function Puzzle() {
       { text: 'Back to Menu', width: 17/40 },
       { text: 'Snap!', class: 'inactive', width: 8/40 }
     ]})),
-    this.addChild(new Plaque(9/16, null)),
+    this.addChild(new Plaque(9/16, { node: new Board(3, contextWidth) })),
     this.addChild(new Plaque(2.5/16, [
       { text: 'Moves<br>Remaining', class: 'align-right', width: 1/2 },
       { text: '&mdash;', class: 'heading indented', width: 1/2 }
     ])),
     this.addChild(new Plaque(1/16, null))
   ];
+  this.board = this.plaques[2].child;
+  this.plaques[2].el.setProperty('zIndex', 2);
 }
 Puzzle.prototype = Object.create(View.prototype);
+
+Puzzle.prototype.newImage = function() {
+  // get image, attach to pieces and rescramble them...
+  var board = this.board;
+  board.el.addClass('loading');
+  setTimeout(function() {
+    board.el.removeClass('loading');
+    for (var i = 0; i < board.pieces.length; i++) {
+      board.pieces[i].scaleTweener.set(1, 1, 1, {
+        duration: 600 + (600 * i / board.pieces.length),
+        curve: 'inOutCirc'
+      })
+    }
+  }, 5000);
+}
+
+
 
 function Menu() {
   View.call(this);
@@ -250,6 +270,8 @@ function Plaque(height, contents) {
       }
     } else if (contentSet.icon || contentSet.text) {
       container.content = container.addChild(new Content(contentSet));
+    } else if (contentSet.node) {
+      container.child = container.addChild(contentSet.node);
     }
   };
 
@@ -308,13 +330,6 @@ Button.prototype = Object.create(Node.prototype);
 // UNTOUCHED CODE STARTS HERE //
 
 
-PuzzleApp.prototype.resizeChildren = function (contextSize)  {
-  var boardWidth = contextSize[0];
-  boardWidth = boardWidth > this.boardMaxWidth ?
-    this.boardMaxWidth : boardWidth;
-  //this.board.resizeChildren(boardWidth);
-}
-
 function _bindPuzzleAppEvents() {
   var rootNode = this,
       pieces = []; //this.board.pieces;
@@ -327,10 +342,6 @@ function _bindPuzzleAppEvents() {
   this.addComponent({
     onReceive: function (e, payload) {
 
-      if ((e === 'mouseup') /*&& (payload.node.key === 'resumePuzzleBtn')*/) {
-        console.log('a button was clicked');
-      }
-
       if ((e === 'mousedown' || e === 'touchstart') && (payload.node.constructor === Piece)) {
         var toMoveNode = payload.node,
             initX = (e === 'touchstart') ? payload.touches[0].clientX : payload.clientX,
@@ -338,7 +349,7 @@ function _bindPuzzleAppEvents() {
 
         rootNode.childToMove = {
           node: toMoveNode,
-          nodeWidth: rootNode.board.getAbsoluteSize()[0] / rootNode.board.piecesPerRow,
+          nodeWidth: rootNode.contextSize[0] / rootNode.puzzle.board.piecesPerRow,
           swapingNode: null,
           deltaX: initX - toMoveNode.getPosition()[0],
           deltaY: initY - toMoveNode.getPosition()[1]
@@ -360,7 +371,7 @@ function _bindPuzzleAppEvents() {
             nodeWidth = rootNode.childToMove.nodeWidth,
             startingX = movingNode.indexData.xIndex * nodeWidth,
             startingY = movingNode.indexData.yIndex * nodeWidth,
-            pieces = rootNode.board.pieces;
+            pieces = rootNode.puzzle.board.pieces;
           
         movingNode.hasMoved = true;
         movingNode.setPosition(moveX, moveY);
@@ -417,13 +428,13 @@ function _bindPuzzleAppEvents() {
 
 // Board Module
 
-function Board(piecesPerRow, contextWidth) {
+function Board(piecesPerRow, boardWidth) {
   Node.call(this);
   _centerNode.call(this);
   
   this.piecesPerRow = piecesPerRow;
-  this.contextWidth = contextWidth;
-  this.el = new DOMElement(this, {tagName: 'board'});
+  this.boardWidth = boardWidth;
+  this.el = new DOMElement(this, { classes: ['board'] });
   
 
   this.setupRound(piecesPerRow);
@@ -432,9 +443,9 @@ function Board(piecesPerRow, contextWidth) {
 Board.prototype = Object.create(Node.prototype);
 
 Board.prototype.adaptToContext = function () {
-  this.setAbsoluteSize(this.contextWidth, this.contextWidth);
+  this.setAbsoluteSize(this.boardWidth, this.boardWidth);
   for (var i = 0; i < this.pieces.length; i++) {
-    this.pieces[i].repositionNode(this.contextWidth);
+    this.pieces[i].repositionNode(this.boardWidth);
   }
 }
 
@@ -474,7 +485,7 @@ function Piece(imageUrl, indexData) {
   this.indexData = indexData;
   
   this.el = new DOMElement(this, {
-    tagName: 'piece',
+    classes: ['piece'],
     properties: {
       backgroundImage: 'url(' + imageUrl + ')',
       backgroundSize: 100 / this.proportion + '%'
@@ -483,6 +494,7 @@ function Piece(imageUrl, indexData) {
   this.setImagePosition(indexData);
   
   this.scaleTweener = new Scale(this);
+  this.scaleTweener.set(0, 0, 1);
   
   this.addUIEvent('mousedown');
   this.addUIEvent('touchstart');
