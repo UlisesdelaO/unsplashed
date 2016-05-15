@@ -8,8 +8,9 @@
 // Famous dependencies
 
 var FamousEngine = famous.core.FamousEngine,
-    Camera = famous.components.Camera,
+    Clock = FamousEngine.getClock(),
     Node = famous.core.Node,
+    Camera = famous.components.Camera,
     Position = famous.components.Position,
     Rotation = famous.components.Rotation,
     Scale = famous.components.Scale,
@@ -40,16 +41,6 @@ function PuzzleApp(contextSize) {
   this.movesCounter = this.puzzle.plaques[3].columns[1].content;
 
   // Testing Some Event Listeners
-  this.winStatsNode.addComponent({
-    onMount: function(node) {
-      node.setContent({ text: '1 (33.3%)' });
-    }
-  });
-  this.lossStatsNode.addComponent({
-    onMount: function(node) {
-      node.setContent({ text: '2 (66.7%)' });
-    }
-  });
   this.resumePuzzleBtn.addComponent({
     onMount: function(node) {
       node.el.addClass('inactive');
@@ -88,6 +79,9 @@ PuzzleApp.prototype = Object.create(Node.prototype);
 
 PuzzleApp.prototype.newGame = function() {
   var rootNode = this;
+  for (var i = 0; i < this.puzzle.board.pieces.length; i++) {
+    this.puzzle.board.pieces[i].scaleTweener.set(0, 0, 1);
+  }
   this.menu.transitionTo(this.puzzle, function() {
     rootNode.puzzle.newImage();
   });
@@ -115,22 +109,23 @@ View.prototype.resetPlaquesRotation = function() {
 }
 
 View.prototype.transitionIn = function() {
-  this.animatePlaques(1, 0, 'easeOut');
+  var viewNode =  this;
+  Clock.setTimeout(function() {
+    viewNode.animatePlaques(1, 0, 'outCirc', 900);
+  }, 300);
 }
 
 View.prototype.transitionTo = function(otherView, onCompleteFn) {
   var thisView = this;
-  this.animatePlaques(.75, Math.PI, 'inCirc', function() {
+  this.animatePlaques(.75, Math.PI, 'inCirc', 600, function() {
     thisView.el.addClass('hidden');
     thisView.resetPlaquesRotation();
     otherView.el.removeClass('hidden');
-    otherView.animatePlaques(1, 0, 'outCirc', onCompleteFn);
+    otherView.animatePlaques(1, 0, 'outCirc', 600, onCompleteFn);
   });
 }
 
-View.prototype.animatePlaques = function(scaleXY, rotationX, easing, onCompleteFn) {
-  var tweenDuration = 600;
-  
+View.prototype.animatePlaques = function(scaleXY, rotationX, easing, tweenDuration, onCompleteFn) {
   this.scaleTweener.set(scaleXY, scaleXY, 1, {
     duration: tweenDuration,
     curve: easing
@@ -171,18 +166,12 @@ function Puzzle(contextWidth) {
 Puzzle.prototype = Object.create(View.prototype);
 
 Puzzle.prototype.newImage = function() {
-  // get image, attach to pieces and rescramble them...
   var board = this.board;
   board.el.addClass('loading');
-  setTimeout(function() {
+  Clock.setTimeout(function() {
     board.el.removeClass('loading');
-    for (var i = 0; i < board.pieces.length; i++) {
-      board.pieces[i].scaleTweener.set(1, 1, 1, {
-        duration: 600 + (600 * i / board.pieces.length),
-        curve: 'inOutCirc'
-      })
-    }
-  }, 5000);
+    board.setupPuzzle('image_squared.jpg');
+  }, 1000);
 }
 
 
@@ -205,24 +194,15 @@ function Menu() {
       { icon: 'hourglass', width: 2/9 },
       { text: 'Beware of the moves counter, moves are not unlimited', width: 6.6/9 }
     ])),
-    this.addChild(new Plaque(1/8, {
-      main: [
-        { icon: 'pie-chart', width: 2/9 },
-        { rows: [{ text: 'Win Stats' }, { text: '&mdash;' }], width: 3.3/9 },
-        { rows: [{ text: 'Loss Stats' }, { text: '&mdash;' }], width: 3.3/9 }
-      ],
-      onflip: { text: 'Paused puzzle will be discarded and<br>counted as a loss. Continue?' }
-    })),
-    this.addChild(new Plaque(1/8, {
-      main: { buttons: [
-        { text: 'Resume Puzzle', width: 17/40 },
-        { text: 'New Puzzle', width: 17/40 }
-      ]},
-      onflip: { buttons: [
-        { text: 'Yes', width: 17/40 },
-        { text: 'No', width: 17/40 }
-      ]}
-    })),
+    this.addChild(new Plaque(1/8, [
+      { icon: 'pie-chart', width: 2/9 },
+      { rows: [{ text: 'Win Stats' }, { text: '&mdash;' }], width: 3.3/9 },
+      { rows: [{ text: 'Loss Stats' }, { text: '&mdash;' }], width: 3.3/9 }
+    ])),
+    this.addChild(new Plaque(1/8, { buttons: [
+      { text: 'Resume Puzzle', width: 17/40 },
+      { text: 'New Puzzle', width: 17/40 }
+    ]})),
     this.addChild(new Plaque(1/8, { icon: 'crop' }))
   ];
   this.transitionIn();
@@ -369,8 +349,8 @@ function _bindPuzzleAppEvents() {
             moveX = clientX - rootNode.childToMove.deltaX,
             moveY = clientY - rootNode.childToMove.deltaY,
             nodeWidth = rootNode.childToMove.nodeWidth,
-            startingX = movingNode.indexData.xIndex * nodeWidth,
-            startingY = movingNode.indexData.yIndex * nodeWidth,
+            startingX = movingNode.xIndex * nodeWidth,
+            startingY = movingNode.yIndex * nodeWidth,
             pieces = rootNode.puzzle.board.pieces;
           
         movingNode.hasMoved = true;
@@ -378,9 +358,9 @@ function _bindPuzzleAppEvents() {
 
         rootNode.childToMove.swapingNode = null;
         for (var i = 0; i < pieces.length; i++) {
-          var minX = pieces[i].indexData.xIndex * nodeWidth - nodeWidth/2,
+          var minX = pieces[i].xIndex * nodeWidth - nodeWidth/2,
               maxX = minX + nodeWidth,
-              minY = pieces[i].indexData.yIndex * nodeWidth  - nodeWidth/2,
+              minY = pieces[i].yIndex * nodeWidth  - nodeWidth/2,
               maxY = minY + nodeWidth,
               movingOver = minX <= moveX && moveX < maxX && minY <= moveY && moveY < maxY;
 
@@ -434,87 +414,86 @@ function Board(piecesPerRow, boardWidth) {
   
   this.piecesPerRow = piecesPerRow;
   this.boardWidth = boardWidth;
+  this.setAbsoluteSize(boardWidth, boardWidth);
   this.el = new DOMElement(this, { classes: ['board'] });
   
-
-  this.setupRound(piecesPerRow);
-}
-
-Board.prototype = Object.create(Node.prototype);
-
-Board.prototype.adaptToContext = function () {
-  this.setAbsoluteSize(this.boardWidth, this.boardWidth);
-  for (var i = 0; i < this.pieces.length; i++) {
-    this.pieces[i].repositionNode(this.boardWidth);
-  }
-}
-
-Board.prototype.setupRound = function (piecesPerRow) {
-  var imageUrl = 'image_rectangular.jpg';
-
-  this.piecesPerRow = piecesPerRow;
   this.pieces = [];
+  this.indexedLocations = [];
   
   for (var y = 0; y < piecesPerRow; y++) {
     for (var x = 0; x < piecesPerRow; x++) {
-      this.pieces.push(this.addChild(new Piece(imageUrl, {
-        xIndex: x,
-        yIndex: y,
-        maxXYIndex: piecesPerRow - 1,
-        angleIndex: _randomIntBetween(0, 3) / 2
-      })));
+      this.pieces.push(this.addChild(new Piece(x, y, piecesPerRow, boardWidth)));
     }
   }
-  this.adaptToContext();
+}
+Board.prototype = Object.create(Node.prototype);
+
+Board.prototype.setupPuzzle = function(imageUrl) {
+  
+  for (var i = 0, length = this.pieces.length; i < length; i++) {
+    this.pieces[i].setBackground(imageUrl, 1);
+    this.pieces[i].swapIndices(this.pieces[_randomIntBetween(0, length)]);
+  }
+  for (var i = 0; i < this.pieces.length; i++) {
+    this.pieces[i].setIndexedPosition();
+    this.pieces[i].scaleTweener.set(1, 1, 1, {
+      duration: 600 + (600 * i / this.pieces.length),
+      curve: 'inOutCirc'
+    });
+  }
+
 }
 
 
 // Piece Module
 
-function Piece(imageUrl, indexData) {
+function Piece(xIndex, yIndex, piecesPerRow, boardWidth) {
   Node.call(this);
-  
-  this.proportion = 1 / (indexData.maxXYIndex + 1);
-  this.setProportionalSize(this.proportion, this.proportion);
-  this.setOrigin(0.5, 0.5);
-  this.setRotation(0, 0, Math.PI * indexData.angleIndex);
   
   this.inMotion = false;
   this.hasMoved = false;
   this.hoverActivated = false;
-  this.indexData = indexData;
+  this.piecesPerRow = piecesPerRow;
+  this.boardWidth = boardWidth;
+  this.xIndex = xIndex;
+  this.yIndex = yIndex;
+  this.bgXIndex = xIndex;
+  this.bgYIndex = yIndex;
+  this.scaleTweener = new Scale(this);
   
   this.el = new DOMElement(this, {
     classes: ['piece'],
-    properties: {
-      backgroundImage: 'url(' + imageUrl + ')',
-      backgroundSize: 100 / this.proportion + '%'
-    }
+    properties: { backgroundSize: 100 * piecesPerRow + '%' }
   });
-  this.setImagePosition(indexData);
-  
-  this.scaleTweener = new Scale(this);
+
+  this.setProportionalSize(1 / piecesPerRow, 1 / piecesPerRow);
+  this.setOrigin(0.5, 0.5);
   this.scaleTweener.set(0, 0, 1);
-  
+
   this.addUIEvent('mousedown');
   this.addUIEvent('touchstart');
 }
-
 Piece.prototype = Object.create(Node.prototype);
 Piece.prototype.constructor = Piece;
 
-Piece.prototype.setImagePosition = function (indexData) {
-  var positionX = 100 * indexData.xIndex / indexData.maxXYIndex + '%',
-      positionY = 100 * indexData.yIndex / indexData.maxXYIndex + '%';
+Piece.prototype.setIndexedPosition = function() {
+  var positionX = this.boardWidth * this.xIndex / this.piecesPerRow,
+      positionY = this.boardWidth * this.yIndex / this.piecesPerRow;
   
-  this.el.setProperty('backgroundPosition', positionX + ' ' + positionY);
+  this.angleIndex = _randomIntBetween(0, 3) / 2;
+  this.setRotation(0, 0, this.angleIndex * Math.PI);
+  this.setPosition(positionX, positionY);
 }
 
-Piece.prototype.repositionNode = function (boardWidth) {
-  var xPosition = boardWidth * this.proportion * this.indexData.xIndex,
-      yPosition = boardWidth * this.proportion * this.indexData.yIndex;
+Piece.prototype.setBackground = function(imageUrl, imageRatio) {
   
-  this.setPosition(xPosition, yPosition);
+  // INCLUDE IMAGE RATIO ADJUSTMENTS CALCULATIONS !!!
+  
+  var bgPositionX = 100 * this.bgXIndex / (this.piecesPerRow - 1) + '%',
+      bgPositionY = 100 * this.bgYIndex / (this.piecesPerRow - 1) + '%';
+
+  this.el.setProperty('backgroundPosition', bgPositionX + ' ' + bgPositionY);
+  this.el.setProperty('backgroundImage', 'url(' + imageUrl + ')');
 }
 
 Piece.prototype.rotate = function () {
@@ -525,10 +504,10 @@ Piece.prototype.rotate = function () {
     
     this.inMotion = true;
     this.el.addClass('in-motion');
-    this.indexData.angleIndex = this.indexData.angleIndex > 1 ?
-      0 : this.indexData.angleIndex + 1/2;
+    this.angleIndex = this.angleIndex > 1 ?
+      0 : this.angleIndex + 1/2;
     
-    rotationTweener.set(0, 0, Math.PI*this.indexData.angleIndex, {
+    rotationTweener.set(0, 0, Math.PI*this.angleIndex, {
       duration: 200,
       curve: 'easeInOut'
     }, function () {
@@ -548,18 +527,21 @@ Piece.prototype.rotate = function () {
   }
 }
 
+Piece.prototype.swapIndices = function(otherPiece) {
+  var tempXIndex = this.xIndex,
+      tempYIndex = this.yIndex;
+
+  if (otherPiece) {
+    this.xIndex = otherPiece.xIndex;
+    this.yIndex = otherPiece.yIndex;
+    otherPiece.xIndex = tempXIndex;
+    otherPiece.yIndex = tempYIndex;
+  }
+}
+
 Piece.prototype.swapAfterDrag = function (swappedNode, nodeWidth) {
   if (!this.inMotion) {
-    var tempXIndex = this.indexData.xIndex,
-        tempYIndex = this.indexData.yIndex;
-
-    if (swappedNode) {
-      this.indexData.xIndex = swappedNode.indexData.xIndex;
-      this.indexData.yIndex = swappedNode.indexData.yIndex;
-      swappedNode.indexData.xIndex = tempXIndex;
-      swappedNode.indexData.yIndex = tempYIndex;
-    }
-    
+    this.swapIndices(swappedNode);
     this.drop(nodeWidth);
     if (swappedNode) swappedNode.drop(nodeWidth);
   }
@@ -567,8 +549,8 @@ Piece.prototype.swapAfterDrag = function (swappedNode, nodeWidth) {
 
 Piece.prototype.drop = function (nodeWidth) {
   var node = this,
-      thisX = this.indexData.xIndex * nodeWidth,
-      thisY = this.indexData.yIndex * nodeWidth,
+      thisX = this.xIndex * nodeWidth,
+      thisY = this.yIndex * nodeWidth,
       thisPositionTweener = new Position(this),
       endScaleDuration = 100,
       moveCurve = 'easeInOut',
@@ -631,12 +613,8 @@ function initAppOn(sceneSelector) {
 
   puzzleAppScene.addComponent({
     onReceive: function (e, payload) {
-      if (e === 'CONTEXT_RESIZE') {
-        if (puzzleApp) {
-          puzzleApp.resizeChildren(payload);
-        } else {
-          puzzleApp = puzzleAppScene.addChild(new PuzzleApp(payload));
-        }
+      if (e === 'CONTEXT_RESIZE' && !puzzleApp) {
+        puzzleApp = puzzleAppScene.addChild(new PuzzleApp(payload));
       }
     }.bind(this)
   });

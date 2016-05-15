@@ -130,10 +130,11 @@ footer.credits a {
 .puzzle-app .view.menu .plaque:first-child svg,
 .puzzle-app .view.menu .plaque:last-child svg { max-height: 40%; }
 
-
-
 .puzzle-app .view .plaque .children-centered {
   height: 100%;
+}
+.puzzle-app .view .plaque .text {
+  cursor: default;
 }
 .puzzle-app .view .plaque .text.heading {
   font-size: 35px;
@@ -149,7 +150,6 @@ footer.credits a {
 .puzzle-app .view .plaque .column .text {
   text-align: left;
   width: 100%;
-  -webkit-backface-visibility: hidden;
 }
 .puzzle-app .view .plaque .column .text.align-right {
   text-align: right;
