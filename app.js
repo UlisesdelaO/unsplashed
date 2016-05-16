@@ -22,55 +22,19 @@ var FamousEngine = famous.core.FamousEngine,
 function PuzzleApp(contextSize) {
   Node.call(this);
   this.el = new DOMElement(this, { classes: ['puzzle-app'] });
+  this.contextSize = contextSize;
   
   var rootNode = this;
 
-  this.contextSize = contextSize;
-
-  // Menu Elements
+  // Menu and its Button Elements
   this.menu = this.addChild(new Menu());
-  this.winStatsNode = this.menu.plaques[5].columns[1].rows[1].content;
-  this.lossStatsNode = this.menu.plaques[5].columns[2].rows[1].content;
   this.resumePuzzleBtn = this.menu.plaques[6].buttons[0];
   this.newPuzzleBtn = this.menu.plaques[6].buttons[1];
   
-  // Puzzle Elements
+  // Puzzle and its Button Elements
   this.puzzle = this.addChild(new Puzzle(contextSize[0]));
   this.backBtn = this.puzzle.plaques[1].buttons[0];
   this.skipBtn = this.puzzle.plaques[1].buttons[1];
-  this.movesCounter = this.puzzle.plaques[3].columns[1].content;
-
-  // Testing Some Event Listeners
-  this.resumePuzzleBtn.addComponent({
-    onMount: function(node) {
-      node.el.addClass('inactive');
-    }
-  });
-  this.newPuzzleBtn.addComponent({
-    onMount: function(node) {
-      node.addUIEvent('click');
-    },
-    onReceive: function(e, payload) {
-      if (e === 'click') { rootNode.newGame(); }
-    }
-  });
-  this.backBtn.addComponent({
-    onMount: function(node) {
-      node.addUIEvent('click');
-    },
-    onReceive: function(e, payload) {
-      if (e === 'click') {
-        rootNode.puzzle.transitionTo(rootNode.menu);
-      }
-    }
-  });
-  try {
-    this.movesCounter.addComponent({
-      onMount: function(node) {
-        node.setContent({ text: '36' });
-      }
-    });
-  } catch(e) {}
 
   _bindPuzzleAppEvents.call(this);
 }
@@ -79,6 +43,9 @@ PuzzleApp.prototype = Object.create(Node.prototype);
 
 PuzzleApp.prototype.newGame = function() {
   var rootNode = this;
+
+  this.puzzle.setMovesCounterTo(this.puzzle.maxMovesCounter);
+
   for (var i = 0; i < this.puzzle.board.pieces.length; i++) {
     this.puzzle.board.pieces[i].scaleTweener.set(0, 0, 1);
   }
@@ -87,228 +54,32 @@ PuzzleApp.prototype.newGame = function() {
   });
 }
 
-
-function View() {
-  Node.call(this);
-  this.el = new DOMElement(this, { classes: ['view'] });
-  this.plaques = [];
-  this.scaleTweener = new Scale(this);
-
-  this.scaleTweener.set(.75, .75, 1);
-  this.setAlign(0.5, 0.5);
-  this.setMountPoint(0.5, 0.5);
-  this.setOrigin(0.5, 0.5);
-}
-View.prototype = Object.create(Node.prototype);
-
-View.prototype.resetPlaquesRotation = function() {
-  for (var i = 0; i < this.plaques.length; i++) {
-    var rotationTweener = new Rotation(this.plaques[i]);
-    rotationTweener.set(-Math.PI, 0, 0);
-  }
-}
-
-View.prototype.transitionIn = function() {
-  var viewNode =  this;
-  Clock.setTimeout(function() {
-    viewNode.animatePlaques(1, 0, 'outCirc', 900);
-  }, 300);
-}
-
-View.prototype.transitionTo = function(otherView, onCompleteFn) {
-  var thisView = this;
-  this.animatePlaques(.75, Math.PI, 'inCirc', 600, function() {
-    thisView.el.addClass('hidden');
-    thisView.resetPlaquesRotation();
-    otherView.el.removeClass('hidden');
-    otherView.animatePlaques(1, 0, 'outCirc', 600, onCompleteFn);
-  });
-}
-
-View.prototype.animatePlaques = function(scaleXY, rotationX, easing, tweenDuration, onCompleteFn) {
-  this.scaleTweener.set(scaleXY, scaleXY, 1, {
-    duration: tweenDuration,
-    curve: easing
-  }, function() {
-    try { onCompleteFn(); } catch(e) {}
-  });
-  
-  for (var i = 0; i < this.plaques.length; i++) {
-    var rotationTweener = new Rotation(this.plaques[i]);
-    rotationTweener.set(rotationX, 0, 0, {
-      duration: tweenDuration,
-      curve: easing
-    });
-  }
-}
-
-
-
-function Puzzle(contextWidth) {
-  View.call(this);
-  this.el.addClass('puzzle').addClass('hidden');
-  this.plaques = [
-    this.addChild(new Plaque(1/16, null)),
-    this.addChild(new Plaque(2.5/16, { buttons: [
-      { text: 'Back to Menu', width: 17/40 },
-      { text: '&rarr;', class: 'inactive', width: 6/40 }
-    ]})),
-    this.addChild(new Plaque(9/16, { node: new Board(3, contextWidth) })),
-    this.addChild(new Plaque(2.5/16, [
-      { text: 'Moves<br>Remaining', class: 'align-right', width: 1/2 },
-      { text: '&mdash;', class: 'heading indented', width: 1/2 }
-    ])),
-    this.addChild(new Plaque(1/16, null))
-  ];
-  this.board = this.plaques[2].child;
-  this.plaques[2].el.setProperty('zIndex', 2);
-}
-Puzzle.prototype = Object.create(View.prototype);
-
-
-
-function Menu() {
-  View.call(this);
-  this.el.addClass('menu');
-  this.plaques = [
-    this.addChild(new Plaque(1/8, { icon: 'crop' })),
-    this.addChild(new Plaque(1/8, { text: 'Unsplashed', class: 'heading' })),
-    this.addChild(new Plaque(1/8, [
-      { icon: 'redo', width: 2/9 },
-      { text: 'Tap pieces to rotate them 90 degrees clockwise', width: 6.6/9 }
-    ])),
-    this.addChild(new Plaque(1/8, [
-      { icon: 'move', width: 2/9 },
-      { text: 'Drag and drop pieces to swap their positions', width: 6.6/9 }
-    ])),
-    this.addChild(new Plaque(1/8, [
-      { icon: 'hourglass', width: 2/9 },
-      { text: 'Beware of the moves counter, moves are not unlimited', width: 6.6/9 }
-    ])),
-    this.addChild(new Plaque(1/8, [
-      { icon: 'pie-chart', width: 2/9 },
-      { rows: [{ text: 'Win Stats' }, { text: '&mdash;' }], width: 3.3/9 },
-      { rows: [{ text: 'Loss Stats' }, { text: '&mdash;' }], width: 3.3/9 }
-    ])),
-    this.addChild(new Plaque(1/8, { buttons: [
-      { text: 'Resume Puzzle', width: 17/40 },
-      { text: 'New Puzzle', width: 17/40 }
-    ]})),
-    this.addChild(new Plaque(1/8, { icon: 'crop' }))
-  ];
-  this.transitionIn();
-}
-Menu.prototype = Object.create(View.prototype);
-
-function Plaque(height, contents) {
-  Node.call(this);
-  this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
-  this.setOrigin(0.5, 0.5);
-  this.setRotation(-Math.PI, 0, 0);
-  this.setProportionalSize(1, height);
-  
-  var mainContents = (contents && contents.main) ? contents.main : contents,
-      onflipContents = (contents && contents.onflip) ? contents.onflip : null;
-
-  var setupElements = function (contentSet, container) {
-    if (contentSet.constructor === Array) {
-      container.el.addClass('children-float');
-      container.columns = [];
-      for (var i = 0; i < contentSet.length; i++) {
-        var column = container.addChild(),
-            width = contentSet[i].width || 1;
-        column.el = new DOMElement(column, { classes: ['column', 'relative'] });
-        column.setProportionalSize(width, 1);
-        if (contentSet[i].rows) {
-          column.rows = [];
-          for (var j = 0; j < contentSet[i].rows.length; j++) {
-            var row = column.addChild();
-            row.el = new DOMElement(row, { classes: ['row', 'relative'] });
-            row.setProportionalSize(1, 1/contentSet[i].rows.length);
-            row.content = row.addChild(new Content(contentSet[i].rows[j]));
-            column.rows.push(row);
-          }
-        } else {
-          column.addChild(new Content(contentSet[i]));
-        }
-        container.columns.push(column);
-      }
-    } else if (contentSet.buttons) {
-      container.el.addClass('children-centered');
-      container.buttons = [];
-      for (var i = 0; i < contentSet.buttons.length; i++) {
-        container.buttons.push(container.addChild(new Button(contentSet.buttons[i])));
-      }
-    } else if (contentSet.icon || contentSet.text) {
-      container.content = container.addChild(new Content(contentSet));
-    } else if (contentSet.node) {
-      container.child = container.addChild(contentSet.node);
-    }
-  };
-
-  if (mainContents) {
-    setupElements(mainContents, this);
-  }
-  if (onflipContents) {
-    this.onflipContainer = this.addChild();
-    this.onflipContainer.el = new DOMElement(this.onflipContainer, { classes: ['on-flip'] });
-    setupElements(onflipContents, this.onflipContainer);
-  }
-}
-Plaque.prototype = Object.create(Node.prototype);
-
-function Content(details) {
-  Node.call(this);
-  this.el = new DOMElement(this, { classes: ['relative'] });
-  this.setContent(details);
-}
-Content.prototype = Object.create(Node.prototype);
-
-Content.prototype.setContent = function(newContent) {
-  var contentStr = '<div class="children-centered">',
-      contentClass = newContent.class || '';
-
-  if (newContent.icon) {
-    contentStr += '<svg class="lnr lnr-' + newContent.icon + '">';
-    contentStr += '<use xlink:href="#lnr-' + newContent.icon + '"></use></svg>';
-  } else if (newContent.text) {
-    contentStr += '<span class="text ' + contentClass + '">';
-    contentStr += newContent.text + '</span>';
-  }
-
-  contentStr += '</div>';
-  this.el.setContent(contentStr);
-}
-
-
-function Button(details) {
-  Node.call(this);
-  this.el = new DOMElement(this, {
-    tagName: 'button',
-    classes: ['relative'],
-    attributes: { style: 'display:inline-block' },
-    content: '<span>' + details.text + '</span>'
-  });
-  this.setSizeMode('relative', 'render');
-  this.setProportionalSize(details.width, 1);
-  if (details.class) {
-    this.el.addClass(details.class);
-  }
-}
-Button.prototype = Object.create(Node.prototype);
-
-
-// UNTOUCHED CODE STARTS HERE //
-
-
 function _bindPuzzleAppEvents() {
   var rootNode = this,
-      pieces = []; //this.board.pieces;
+      pieces = [];
 
   this.addUIEvent('mousemove');
   this.addUIEvent('touchmove');
   this.addUIEvent('mouseup');
   this.addUIEvent('touchend');
+
+  this.resumePuzzleBtn.addComponent({
+    onMount: function(node) { node.el.addClass('inactive'); }
+  });
+  this.newPuzzleBtn.addComponent({
+    onMount: function(node) { node.addUIEvent('click'); },
+    onReceive: function(e, payload) {
+      if (e === 'click') { rootNode.newGame(); }
+    }
+  });
+  this.backBtn.addComponent({
+    onMount: function(node) { node.addUIEvent('click'); },
+    onReceive: function(e, payload) {
+      if (e === 'click') {
+        rootNode.puzzle.transitionTo(rootNode.menu);
+      }
+    }
+  });
 
   this.addComponent({
     onReceive: function (e, payload) {
@@ -384,9 +155,13 @@ function _bindPuzzleAppEvents() {
                 nodeWidth = rootNode.childToMove.nodeWidth;
 
             movedNode.swapAfterDrag(swappedNode, nodeWidth);
+            if (swappedNode) {
+              rootNode.puzzle.decrementMovesCounter();
+            }
 
           } else {
             rootNode.childToMove.node.rotate();
+            rootNode.puzzle.decrementMovesCounter();
           }
           rootNode.childToMove.node.hasMoved = false;
           rootNode.childToMove = null;
@@ -395,6 +170,254 @@ function _bindPuzzleAppEvents() {
     }.bind(this)
   });
 }
+
+
+// View Module
+
+function View() {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['view'] });
+  this.plaques = [];
+  this.scaleTweener = new Scale(this);
+
+  this.scaleTweener.set(.75, .75, 1);
+  this.setAlign(0.5, 0.5);
+  this.setMountPoint(0.5, 0.5);
+  this.setOrigin(0.5, 0.5);
+}
+
+View.prototype = Object.create(Node.prototype);
+
+View.prototype.resetPlaquesRotation = function() {
+  for (var i = 0; i < this.plaques.length; i++) {
+    var rotationTweener = new Rotation(this.plaques[i]);
+    rotationTweener.set(-Math.PI, 0, 0);
+  }
+}
+
+View.prototype.transitionIn = function() {
+  var viewNode =  this;
+  Clock.setTimeout(function() {
+    viewNode.animatePlaques(1, 0, 'outCirc', 900);
+  }, 300);
+}
+
+View.prototype.transitionTo = function(otherView, onCompleteFn) {
+  var thisView = this;
+  this.animatePlaques(.75, Math.PI, 'inCirc', 600, function() {
+    thisView.el.addClass('hidden');
+    thisView.resetPlaquesRotation();
+    otherView.el.removeClass('hidden');
+    otherView.animatePlaques(1, 0, 'outCirc', 600, onCompleteFn);
+  });
+}
+
+View.prototype.animatePlaques = function(scaleXY, rotationX, easing, tweenDuration, onCompleteFn) {
+  this.scaleTweener.set(scaleXY, scaleXY, 1, {
+    duration: tweenDuration,
+    curve: easing
+  }, function() {
+    try { onCompleteFn(); } catch(e) {}
+  });
+  
+  for (var i = 0; i < this.plaques.length; i++) {
+    var rotationTweener = new Rotation(this.plaques[i]);
+    rotationTweener.set(rotationX, 0, 0, {
+      duration: tweenDuration,
+      curve: easing
+    });
+  }
+}
+
+
+// Menu View Module
+
+function Menu() {
+  View.call(this);
+  this.el.addClass('menu');
+  this.plaques = [
+    this.addChild(new Plaque(1/8, { icon: 'crop' })),
+    this.addChild(new Plaque(1/8, { text: 'Unsplashed', class: 'heading' })),
+    this.addChild(new Plaque(1/8, [
+      { icon: 'redo', width: 2/9 },
+      { text: 'Tap pieces to rotate them 90 degrees clockwise', width: 6.6/9 }
+    ])),
+    this.addChild(new Plaque(1/8, [
+      { icon: 'move', width: 2/9 },
+      { text: 'Drag and drop pieces to swap their positions', width: 6.6/9 }
+    ])),
+    this.addChild(new Plaque(1/8, [
+      { icon: 'hourglass', width: 2/9 },
+      { text: 'Beware of the moves counter, moves are not unlimited', width: 6.6/9 }
+    ])),
+    this.addChild(new Plaque(1/8, [
+      { icon: 'pie-chart', width: 2/9 },
+      { rows: [{ text: 'Win Stats' }, { text: '&mdash;' }], width: 3.3/9 },
+      { rows: [{ text: 'Loss Stats' }, { text: '&mdash;' }], width: 3.3/9 }
+    ])),
+    this.addChild(new Plaque(1/8, { buttons: [
+      { text: 'Resume Puzzle', width: 17/40 },
+      { text: 'New Puzzle', width: 17/40 }
+    ]})),
+    this.addChild(new Plaque(1/8, { icon: 'crop' }))
+  ];
+  this.transitionIn();
+}
+
+Menu.prototype = Object.create(View.prototype);
+
+
+// Puzzle View Module
+
+function Puzzle(contextWidth) {
+  View.call(this);
+  var constPiecesPerRow = 3;
+  
+  this.maxMovesCounter = constPiecesPerRow * constPiecesPerRow * 4;
+  this.movesCounter = this.maxMovesCounter;
+
+  this.el.addClass('puzzle').addClass('hidden');
+  this.plaques = [
+    this.addChild(new Plaque(1/16, null)),
+    this.addChild(new Plaque(2.5/16, { buttons: [
+      { text: '&laquo; Back to Menu', width: 15/40 },
+      { text: 'Next &raquo;', class: 'inactive', width: 8/40 }
+    ]})),
+    this.addChild(new Plaque(9/16, { node: new Board(constPiecesPerRow, contextWidth) })),
+    this.addChild(new Plaque(2.5/16, [
+      { text: 'Moves<br>Remaining', class: 'align-right', width: 1/2 },
+      { text: this.maxMovesCounter, class: 'heading indented', width: 1/2 }
+    ])),
+    this.addChild(new Plaque(1/16, null))
+  ];
+
+  this.board = this.plaques[2].child;
+  this.movesCounterNode = this.plaques[3].columns[1].content;
+  this.plaques[2].el.setProperty('zIndex', 2);
+}
+
+Puzzle.prototype = Object.create(View.prototype);
+
+Puzzle.prototype.setMovesCounterTo = function (number) {
+  if (number <= this.maxMovesCounter) {
+    this.movesCounter = number;
+    this.movesCounterNode.setContent({ text: number.toString(), class: 'heading indented' });
+  }
+}
+
+Puzzle.prototype.decrementMovesCounter = function() {
+  if (this.movesCounter > 0) {
+    this.setMovesCounterTo(this.movesCounter - 1);
+  }
+}
+
+
+// Plaque Module
+
+function Plaque(height, contents) {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['plaque', 'relative'] });
+  this.setOrigin(0.5, 0.5);
+  this.setRotation(-Math.PI, 0, 0);
+  this.setProportionalSize(1, height);
+  
+  var mainContents = (contents && contents.main) ? contents.main : contents,
+      onflipContents = (contents && contents.onflip) ? contents.onflip : null;
+
+  var setupElements = function (contentSet, container) {
+    if (contentSet.constructor === Array) {
+      container.el.addClass('children-float');
+      container.columns = [];
+      for (var i = 0; i < contentSet.length; i++) {
+        var column = container.addChild(),
+            width = contentSet[i].width || 1;
+        column.el = new DOMElement(column, { classes: ['column', 'relative'] });
+        column.setProportionalSize(width, 1);
+        if (contentSet[i].rows) {
+          column.rows = [];
+          for (var j = 0; j < contentSet[i].rows.length; j++) {
+            var row = column.addChild();
+            row.el = new DOMElement(row, { classes: ['row', 'relative'] });
+            row.setProportionalSize(1, 1/contentSet[i].rows.length);
+            row.content = row.addChild(new Content(contentSet[i].rows[j]));
+            column.rows.push(row);
+          }
+        } else {
+          column.content = column.addChild(new Content(contentSet[i]));
+        }
+        container.columns.push(column);
+      }
+    } else if (contentSet.buttons) {
+      container.el.addClass('children-centered');
+      container.buttons = [];
+      for (var i = 0; i < contentSet.buttons.length; i++) {
+        container.buttons.push(container.addChild(new Button(contentSet.buttons[i])));
+      }
+    } else if (contentSet.icon || contentSet.text) {
+      container.content = container.addChild(new Content(contentSet));
+    } else if (contentSet.node) {
+      container.child = container.addChild(contentSet.node);
+    }
+  };
+
+  if (mainContents) {
+    setupElements(mainContents, this);
+  }
+  if (onflipContents) {
+    this.onflipContainer = this.addChild();
+    this.onflipContainer.el = new DOMElement(this.onflipContainer, { classes: ['on-flip'] });
+    setupElements(onflipContents, this.onflipContainer);
+  }
+}
+
+Plaque.prototype = Object.create(Node.prototype);
+
+
+// Content Module
+
+function Content(details) {
+  Node.call(this);
+  this.el = new DOMElement(this, { classes: ['relative'] });
+  this.setContent(details);
+}
+
+Content.prototype = Object.create(Node.prototype);
+
+Content.prototype.setContent = function(newContent) {
+  var contentStr = '<div class="children-centered">',
+      contentClass = newContent.class || '';
+
+  if (newContent.icon) {
+    contentStr += '<svg class="lnr lnr-' + newContent.icon + '">';
+    contentStr += '<use xlink:href="#lnr-' + newContent.icon + '"></use></svg>';
+  } else if (newContent.text) {
+    contentStr += '<span class="text ' + contentClass + '">';
+    contentStr += newContent.text + '</span>';
+  }
+
+  contentStr += '</div>';
+  this.el.setContent(contentStr);
+}
+
+
+// Button Module
+
+function Button(details) {
+  Node.call(this);
+  this.el = new DOMElement(this, {
+    tagName: 'button',
+    classes: ['relative'],
+    attributes: { style: 'display:inline-block' },
+    content: '<span>' + details.text + '</span>'
+  });
+  this.setSizeMode('relative', 'render');
+  this.setProportionalSize(details.width, 1);
+  if (details.class) {
+    this.el.addClass(details.class);
+  }
+}
+
+Button.prototype = Object.create(Node.prototype);
 
 
 // Board Module
@@ -417,13 +440,14 @@ function Board(piecesPerRow, boardWidth) {
     }
   }
 }
+
 Board.prototype = Object.create(Node.prototype);
 
 Board.prototype.newImage = function() {
   var board = this,
-      imageUrl = 'https://source.unsplash.com/random/?=' + (new Date().getTime()),
+      //imageUrl = 'https://source.unsplash.com/random/?=' + (new Date().getTime()),
       //imageUrl = 'image_rectangular_portrait.jpg',
-      //imageUrl = 'image_rectangular_landscape.jpg',
+      imageUrl = 'image_rectangular_landscape.jpg',
       image = new Image();
 
   board.el.addClass('loading');
@@ -480,6 +504,7 @@ function Piece(xIndex, yIndex, piecesPerRow, boardWidth) {
   this.addUIEvent('mousedown');
   this.addUIEvent('touchstart');
 }
+
 Piece.prototype = Object.create(Node.prototype);
 Piece.prototype.constructor = Piece;
 
@@ -611,7 +636,7 @@ Piece.prototype.drop = function (nodeWidth) {
 }
 
 
-// Helper Module
+// Helper Functions
 
 function _centerNode() {
   this.setSizeMode(1, 1);
