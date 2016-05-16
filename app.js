@@ -37,7 +37,7 @@ function PuzzleApp(contextSize) {
   // Puzzle Elements
   this.puzzle = this.addChild(new Puzzle(contextSize[0]));
   this.backBtn = this.puzzle.plaques[1].buttons[0];
-  this.snapBtn = this.puzzle.plaques[1].buttons[1];
+  this.skipBtn = this.puzzle.plaques[1].buttons[1];
   this.movesCounter = this.puzzle.plaques[3].columns[1].content;
 
   // Testing Some Event Listeners
@@ -83,7 +83,7 @@ PuzzleApp.prototype.newGame = function() {
     this.puzzle.board.pieces[i].scaleTweener.set(0, 0, 1);
   }
   this.menu.transitionTo(this.puzzle, function() {
-    rootNode.puzzle.newImage();
+    rootNode.puzzle.board.newImage();
   });
 }
 
@@ -151,7 +151,7 @@ function Puzzle(contextWidth) {
     this.addChild(new Plaque(1/16, null)),
     this.addChild(new Plaque(2.5/16, { buttons: [
       { text: 'Back to Menu', width: 17/40 },
-      { text: 'Snap!', class: 'inactive', width: 8/40 }
+      { text: '&rarr;', class: 'inactive', width: 6/40 }
     ]})),
     this.addChild(new Plaque(9/16, { node: new Board(3, contextWidth) })),
     this.addChild(new Plaque(2.5/16, [
@@ -164,15 +164,6 @@ function Puzzle(contextWidth) {
   this.plaques[2].el.setProperty('zIndex', 2);
 }
 Puzzle.prototype = Object.create(View.prototype);
-
-Puzzle.prototype.newImage = function() {
-  var board = this.board;
-  board.el.addClass('loading');
-  Clock.setTimeout(function() {
-    board.el.removeClass('loading');
-    board.setupPuzzle('image_squared.jpg');
-  }, 1000);
-}
 
 
 
@@ -428,10 +419,30 @@ function Board(piecesPerRow, boardWidth) {
 }
 Board.prototype = Object.create(Node.prototype);
 
-Board.prototype.setupPuzzle = function(imageUrl) {
-  
+Board.prototype.newImage = function() {
+  var board = this,
+      imageUrl = 'https://source.unsplash.com/random/?=' + (new Date().getTime()),
+      //imageUrl = 'image_rectangular_portrait.jpg',
+      //imageUrl = 'image_rectangular_landscape.jpg',
+      image = new Image();
+
+  board.el.addClass('loading');
+  image.src = imageUrl;
+  image.onload = function() {
+    Clock.setTimeout(function() {
+      board.el.removeClass('loading');
+      board.setupPuzzle(image);
+    }, 300);
+  }
+  image.onerror = function() {
+    console.log('Error loading image!');
+    // put an error sign in the UI later
+  }
+}
+
+Board.prototype.setupPuzzle = function(image) {
   for (var i = 0, length = this.pieces.length; i < length; i++) {
-    this.pieces[i].setBackground(imageUrl, 1);
+    this.pieces[i].setBackground(image);
     this.pieces[i].swapIndices(this.pieces[_randomIntBetween(0, length)]);
   }
   for (var i = 0; i < this.pieces.length; i++) {
@@ -441,7 +452,6 @@ Board.prototype.setupPuzzle = function(imageUrl) {
       curve: 'inOutCirc'
     });
   }
-
 }
 
 
@@ -461,10 +471,7 @@ function Piece(xIndex, yIndex, piecesPerRow, boardWidth) {
   this.bgYIndex = yIndex;
   this.scaleTweener = new Scale(this);
   
-  this.el = new DOMElement(this, {
-    classes: ['piece'],
-    properties: { backgroundSize: 100 * piecesPerRow + '%' }
-  });
+  this.el = new DOMElement(this, { classes: ['piece'] });
 
   this.setProportionalSize(1 / piecesPerRow, 1 / piecesPerRow);
   this.setOrigin(0.5, 0.5);
@@ -485,15 +492,32 @@ Piece.prototype.setIndexedPosition = function() {
   this.setPosition(positionX, positionY);
 }
 
-Piece.prototype.setBackground = function(imageUrl, imageRatio) {
-  
-  // INCLUDE IMAGE RATIO ADJUSTMENTS CALCULATIONS !!!
-  
-  var bgPositionX = 100 * this.bgXIndex / (this.piecesPerRow - 1) + '%',
-      bgPositionY = 100 * this.bgYIndex / (this.piecesPerRow - 1) + '%';
+Piece.prototype.setBackground = function(image) {
+  var iw = image.width,
+      ih = image.height,
+      bw = this.boardWidth,
+      pw = bw / this.piecesPerRow,
+      xPercent = this.bgXIndex / (this.piecesPerRow - 1),
+      yPercent = this.bgYIndex / (this.piecesPerRow - 1),
+      ratio = 1,
+      bgPositionX, bgPositionY;
 
+  if (iw > ih) {
+    ratio = iw / ih;
+    bgPositionX = ((ih - iw) * bw * ratio - 2 * (ih * bw * ratio - iw * pw) * xPercent) / (2 * iw) + 'px';
+    bgPositionY = yPercent * 100 + '%';
+  } else if (iw < ih) {
+    var r = ih / iw;
+    bgPositionY = ((iw - ih) * bw * r - 2 * (iw * bw * r - ih * pw) * yPercent) / (2 * ih) + 'px';
+    bgPositionX = xPercent * 100 + '%';
+  } else {
+    bgPositionX = xPercent * 100 + '%';
+    bgPositionY = yPercent * 100 + '%';
+  }
+
+  this.el.setProperty('backgroundSize', 100 * ratio * this.piecesPerRow + '%');
   this.el.setProperty('backgroundPosition', bgPositionX + ' ' + bgPositionY);
-  this.el.setProperty('backgroundImage', 'url(' + imageUrl + ')');
+  this.el.setProperty('backgroundImage', 'url(' + image.src + ')');
 }
 
 Piece.prototype.rotate = function () {

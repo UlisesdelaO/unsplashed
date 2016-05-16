@@ -25,7 +25,7 @@ footer.credits {
   position: fixed;
   left: 12px;
   bottom: 8px;
-  min-width: 250px;
+  min-width: 500px;
   transform-origin: 0 0;
   transform: rotate3d(0, 0, 1, -90deg);
   text-align: center;
