@@ -45,12 +45,15 @@ PuzzleApp.prototype.newGame = function() {
   var rootNode = this;
 
   this.puzzle.setMovesCounterTo(this.puzzle.maxMovesCounter);
+  this.puzzle.correctPieces = 0;
+  this.puzzle.board.gameOverSign.scaleTweener.set(0, 0, 1);
 
   for (var i = 0; i < this.puzzle.board.pieces.length; i++) {
     this.puzzle.board.pieces[i].scaleTweener.set(0, 0, 1);
   }
   this.menu.transitionTo(this.puzzle, function() {
     rootNode.puzzle.board.newImage();
+    rootNode.resumePuzzleBtn.setEnabledTo(true);
   });
 }
 
@@ -64,7 +67,15 @@ function _bindPuzzleAppEvents() {
   this.addUIEvent('touchend');
 
   this.resumePuzzleBtn.addComponent({
-    onMount: function(node) { node.el.addClass('inactive'); }
+    onMount: function(node) {
+      node.el.addClass('inactive');
+      node.addUIEvent('click');
+    },
+    onReceive: function(e, payload) {
+      if (e === 'click' && payload.node.enabled) {
+        rootNode.menu.transitionTo(rootNode.puzzle);
+      }
+    }
   });
   this.newPuzzleBtn.addComponent({
     onMount: function(node) { node.addUIEvent('click'); },
@@ -81,10 +92,16 @@ function _bindPuzzleAppEvents() {
     }
   });
 
+  // Listen and Handle Gestures
   this.addComponent({
     onReceive: function (e, payload) {
 
-      if ((e === 'mousedown' || e === 'touchstart') && (payload.node.constructor === Piece)) {
+      // Initiate Tap / Drag Gesture
+      if ((e === 'mousedown' || e === 'touchstart') &&
+          (payload.node.constructor === Piece) &&
+          !payload.node.isCorrect &&
+          rootNode.puzzle.movesCounter > 0) {
+
         var toMoveNode = payload.node,
             initX = (e === 'touchstart') ? payload.touches[0].clientX : payload.clientX,
             initY = (e === 'touchstart') ? payload.touches[0].clientY : payload.clientY;
@@ -104,6 +121,7 @@ function _bindPuzzleAppEvents() {
         });
       }
 
+      // Handle Positioning on Mouse / Touch Move Gesture
       if ((e === 'mousemove' || e === 'touchmove') && rootNode.childToMove) {         
         var clientX = (e === 'touchmove') ? payload.touches[0].clientX : payload.clientX,
             clientY = (e === 'touchmove') ? payload.touches[0].clientY : payload.clientY,
@@ -127,7 +145,7 @@ function _bindPuzzleAppEvents() {
               movingOver = minX <= moveX && moveX < maxX && minY <= moveY && moveY < maxY;
 
           if (movingOver && movingNode != pieces[i]) {
-            if (!pieces[i].hoverActivated) {
+            if (!pieces[i].hoverActivated && !pieces[i].isCorrect) {
               pieces[i].hoverActivated = true;
               pieces[i].scaleTweener.set(0.8, 0.8, 1, {
                 duration: 100,
@@ -147,6 +165,7 @@ function _bindPuzzleAppEvents() {
         }
       }
 
+      // Terminate Gesture
       if ((e === 'mouseup' || e === 'touchend')) {
         if (rootNode.childToMove) {
           if (rootNode.childToMove.node.hasMoved) {
@@ -154,14 +173,15 @@ function _bindPuzzleAppEvents() {
                 swappedNode = rootNode.childToMove.swapingNode,
                 nodeWidth = rootNode.childToMove.nodeWidth;
 
+            swappedNode = (swappedNode && swappedNode.isCorrect) ? null : swappedNode;
             movedNode.swapAfterDrag(swappedNode, nodeWidth);
             if (swappedNode) {
-              rootNode.puzzle.decrementMovesCounter();
+              rootNode.puzzle.trackProgress([movedNode, swappedNode]);
             }
 
           } else {
             rootNode.childToMove.node.rotate();
-            rootNode.puzzle.decrementMovesCounter();
+            rootNode.puzzle.trackProgress([rootNode.childToMove.node]);
           }
           rootNode.childToMove.node.hasMoved = false;
           rootNode.childToMove = null;
@@ -271,10 +291,11 @@ Menu.prototype = Object.create(View.prototype);
 
 function Puzzle(contextWidth) {
   View.call(this);
-  var constPiecesPerRow = 3;
   
-  this.maxMovesCounter = constPiecesPerRow * constPiecesPerRow * 4;
+  this.piecesPerRow = 3;
+  this.maxMovesCounter = this.piecesPerRow * this.piecesPerRow * 4;
   this.movesCounter = this.maxMovesCounter;
+  this.correctPieces = 0;
 
   this.el.addClass('puzzle').addClass('hidden');
   this.plaques = [
@@ -283,7 +304,7 @@ function Puzzle(contextWidth) {
       { text: '&laquo; Back to Menu', width: 15/40 },
       { text: 'Next &raquo;', class: 'inactive', width: 8/40 }
     ]})),
-    this.addChild(new Plaque(9/16, { node: new Board(constPiecesPerRow, contextWidth) })),
+    this.addChild(new Plaque(9/16, { node: new Board(this.piecesPerRow, contextWidth) })),
     this.addChild(new Plaque(2.5/16, [
       { text: 'Moves<br>Remaining', class: 'align-right', width: 1/2 },
       { text: this.maxMovesCounter, class: 'heading indented', width: 1/2 }
@@ -308,6 +329,24 @@ Puzzle.prototype.setMovesCounterTo = function (number) {
 Puzzle.prototype.decrementMovesCounter = function() {
   if (this.movesCounter > 0) {
     this.setMovesCounterTo(this.movesCounter - 1);
+  }
+}
+
+Puzzle.prototype.trackProgress = function(pieces) {
+  this.decrementMovesCounter();
+  for (var i = 0; i < pieces.length; i++) {
+    if (pieces[i].bgXIndex == pieces[i].xIndex &&
+        pieces[i].bgYIndex == pieces[i].yIndex &&
+        pieces[i].angleIndex == 0) {
+
+      this.correctPieces++;
+      pieces[i].isCorrect = true;
+    }
+  }
+  if (this.correctPieces == this.piecesPerRow * this.piecesPerRow) {
+    this.board.showGameOverSign({ win: true });
+  } else if (this.movesCounter == 0) {
+    this.board.showGameOverSign({ win: false });
   }
 }
 
@@ -419,6 +458,12 @@ function Button(details) {
 
 Button.prototype = Object.create(Node.prototype);
 
+Button.prototype.setEnabledTo = function(bool) {
+  this.enabled = bool;
+  if (bool) { this.el.removeClass('inactive'); }
+  else { this.el.addClass('inactive'); }
+}
+
 
 // Board Module
 
@@ -439,6 +484,18 @@ function Board(piecesPerRow, boardWidth) {
       this.pieces.push(this.addChild(new Piece(x, y, piecesPerRow, boardWidth)));
     }
   }
+
+  this.gameOverSign = this.addChild();
+  this.gameOverSign.el = new DOMElement(this.gameOverSign, {
+    classes: ['game-over-sign'],
+    content: '<div class="children-centered"><svg class="lnr lnr-thumbs-up"><use xlink:href="#lnr-thumbs-up"></use></svg></div>'
+  });
+  this.gameOverSign.setProportionalSize(1/6, 1/6);
+  this.gameOverSign.setAlign(0.5, 5/6);
+  this.gameOverSign.setMountPoint(0.5, 0.5)
+  this.gameOverSign.setOrigin(0.5, 0.5);
+  this.gameOverSign.scaleTweener = new Scale(this.gameOverSign);
+  this.gameOverSign.scaleTweener.set(0, 0, 1);
 }
 
 Board.prototype = Object.create(Node.prototype);
@@ -451,6 +508,7 @@ Board.prototype.newImage = function() {
       image = new Image();
 
   board.el.addClass('loading');
+  board.el.removeClass('error');
   image.src = imageUrl;
   image.onload = function() {
     Clock.setTimeout(function() {
@@ -459,14 +517,15 @@ Board.prototype.newImage = function() {
     }, 300);
   }
   image.onerror = function() {
-    console.log('Error loading image!');
-    // put an error sign in the UI later
+    board.el.removeClass('loading');
+    board.el.addClass('error');
   }
 }
 
 Board.prototype.setupPuzzle = function(image) {
   for (var i = 0, length = this.pieces.length; i < length; i++) {
     this.pieces[i].setBackground(image);
+    this.pieces[i].isCorrect = false;
     this.pieces[i].swapIndices(this.pieces[_randomIntBetween(0, length)]);
   }
   for (var i = 0; i < this.pieces.length; i++) {
@@ -478,12 +537,25 @@ Board.prototype.setupPuzzle = function(image) {
   }
 }
 
+Board.prototype.showGameOverSign = function(gameOverState) {
+  if (gameOverState.win) {
+    this.gameOverSign.el.removeClass('lost');
+  } else {
+    this.gameOverSign.el.addClass('lost');
+  }
+  this.gameOverSign.scaleTweener.set(1, 1, 1, {
+    duration: 600,
+    curve: 'outBack'
+  });
+}
+
 
 // Piece Module
 
 function Piece(xIndex, yIndex, piecesPerRow, boardWidth) {
   Node.call(this);
   
+  this.isCorrect = false;
   this.inMotion = false;
   this.hasMoved = false;
   this.hoverActivated = false;
@@ -512,7 +584,7 @@ Piece.prototype.setIndexedPosition = function() {
   var positionX = this.boardWidth * this.xIndex / this.piecesPerRow,
       positionY = this.boardWidth * this.yIndex / this.piecesPerRow;
   
-  this.angleIndex = _randomIntBetween(0, 3) / 2;
+  this.angleIndex = _randomIntBetween(1, 3) / 2;
   this.setRotation(0, 0, this.angleIndex * Math.PI);
   this.setPosition(positionX, positionY);
 }
@@ -562,6 +634,7 @@ Piece.prototype.rotate = function () {
     }, function () {
       node.inMotion = false;
       node.el.removeClass('in-motion');
+      //try { onCompleteFn(); } catch(e) {}
     });
 
     scaleTweener.set(1.3, 1.3, 1, {
@@ -631,9 +704,12 @@ Piece.prototype.drop = function (nodeWidth) {
       node.el.removeClass('in-motion');
       node.el.removeClass('to-swap');
       node.inMotion = false;
+      //try { onCompleteFn(); } catch(e) {}
     });
   });
 }
+
+//Piece.prototype.
 
 
 // Helper Functions
