@@ -34,7 +34,9 @@ function PuzzleApp(contextSize) {
   // Puzzle and its Button Elements
   this.puzzle = this.addChild(new Puzzle(contextSize[0]));
   this.backBtn = this.puzzle.plaques[1].buttons[0];
-  this.skipBtn = this.puzzle.plaques[1].buttons[1];
+  this.nextBtn = this.puzzle.plaques[1].buttons[1];
+
+  this.currentView = this.menu;
 
   _bindPuzzleAppEvents.call(this);
 }
@@ -44,6 +46,14 @@ PuzzleApp.prototype = Object.create(Node.prototype);
 PuzzleApp.prototype.newGame = function() {
   var rootNode = this;
 
+  var setupForNewImage = function() {
+    rootNode.puzzle.board.newImage(function() {
+      rootNode.nextBtn.setEnabledTo(true);
+    });
+    rootNode.resumePuzzleBtn.setEnabledTo(true);
+  };
+
+  this.nextBtn.setEnabledTo(false);
   this.puzzle.setMovesCounterTo(this.puzzle.maxMovesCounter);
   this.puzzle.correctPieces = 0;
   this.puzzle.board.gameOverSign.scaleTweener.set(0, 0, 1);
@@ -51,10 +61,15 @@ PuzzleApp.prototype.newGame = function() {
   for (var i = 0; i < this.puzzle.board.pieces.length; i++) {
     this.puzzle.board.pieces[i].scaleTweener.set(0, 0, 1);
   }
-  this.menu.transitionTo(this.puzzle, function() {
-    rootNode.puzzle.board.newImage();
-    rootNode.resumePuzzleBtn.setEnabledTo(true);
-  });
+
+  if (this.currentView.constructor === Menu) {
+    this.menu.transitionTo(this.puzzle, function() {
+      rootNode.currentView = rootNode.puzzle;
+      setupForNewImage();
+    });
+  } else {
+    setupForNewImage();
+  }
 }
 
 function _bindPuzzleAppEvents() {
@@ -68,12 +83,14 @@ function _bindPuzzleAppEvents() {
 
   this.resumePuzzleBtn.addComponent({
     onMount: function(node) {
-      node.el.addClass('inactive');
+      node.setEnabledTo(false);
       node.addUIEvent('click');
     },
     onReceive: function(e, payload) {
       if (e === 'click' && payload.node.enabled) {
-        rootNode.menu.transitionTo(rootNode.puzzle);
+        rootNode.menu.transitionTo(rootNode.puzzle, function() {
+          rootNode.currentView = rootNode.puzzle;
+        });
       }
     }
   });
@@ -87,12 +104,22 @@ function _bindPuzzleAppEvents() {
     onMount: function(node) { node.addUIEvent('click'); },
     onReceive: function(e, payload) {
       if (e === 'click') {
-        rootNode.puzzle.transitionTo(rootNode.menu);
+        rootNode.puzzle.transitionTo(rootNode.menu, function() {
+          rootNode.currentView = rootNode.menu;
+        });
+      }
+    }
+  });
+  this.nextBtn.addComponent({
+    onMount: function(node) { node.addUIEvent('click'); },
+    onReceive: function(e, payload) {
+      if (e === 'click' && payload.node.enabled) {
+        rootNode.newGame();
       }
     }
   });
 
-  // Listen and Handle Gestures
+  // Listen and Handle Tap / Drag Gestures
   this.addComponent({
     onReceive: function (e, payload) {
 
@@ -165,7 +192,7 @@ function _bindPuzzleAppEvents() {
         }
       }
 
-      // Terminate Gesture
+      // Terminate Tap / Drag Gesture
       if ((e === 'mouseup' || e === 'touchend')) {
         if (rootNode.childToMove) {
           if (rootNode.childToMove.node.hasMoved) {
@@ -285,6 +312,7 @@ function Menu() {
 }
 
 Menu.prototype = Object.create(View.prototype);
+Menu.prototype.constructor = Menu;
 
 
 // Puzzle View Module
@@ -302,7 +330,7 @@ function Puzzle(contextWidth) {
     this.addChild(new Plaque(1/16, null)),
     this.addChild(new Plaque(2.5/16, { buttons: [
       { text: '&laquo; Back to Menu', width: 15/40 },
-      { text: 'Next &raquo;', class: 'inactive', width: 8/40 }
+      { text: 'Next &raquo;', width: 8/40 }
     ]})),
     this.addChild(new Plaque(9/16, { node: new Board(this.piecesPerRow, contextWidth) })),
     this.addChild(new Plaque(2.5/16, [
@@ -318,6 +346,7 @@ function Puzzle(contextWidth) {
 }
 
 Puzzle.prototype = Object.create(View.prototype);
+Puzzle.prototype.constructor = Puzzle;
 
 Puzzle.prototype.setMovesCounterTo = function (number) {
   if (number <= this.maxMovesCounter) {
@@ -341,6 +370,7 @@ Puzzle.prototype.trackProgress = function(pieces) {
 
       this.correctPieces++;
       pieces[i].isCorrect = true;
+      pieces[i].el.addClass('correct');
     }
   }
   if (this.correctPieces == this.piecesPerRow * this.piecesPerRow) {
@@ -500,41 +530,47 @@ function Board(piecesPerRow, boardWidth) {
 
 Board.prototype = Object.create(Node.prototype);
 
-Board.prototype.newImage = function() {
+Board.prototype.newImage = function(onCompleteFn) {
   var board = this,
-      //imageUrl = 'https://source.unsplash.com/random/?=' + (new Date().getTime()),
+      imageUrl = 'https://source.unsplash.com/random/?=' + (new Date().getTime()),
       //imageUrl = 'image_rectangular_portrait.jpg',
-      imageUrl = 'image_rectangular_landscape.jpg',
+      //imageUrl = 'image_rectangular_landscape.jpg',
       image = new Image();
 
   board.el.addClass('loading');
-  board.el.removeClass('error');
   image.src = imageUrl;
   image.onload = function() {
     Clock.setTimeout(function() {
       board.el.removeClass('loading');
-      board.setupPuzzle(image);
+      board.setupPuzzle(image, onCompleteFn);
     }, 300);
   }
   image.onerror = function() {
-    board.el.removeClass('loading');
-    board.el.addClass('error');
+    // Not tested!!!
+    board.newImage(onCompleteFn);
   }
 }
 
-Board.prototype.setupPuzzle = function(image) {
+Board.prototype.setupPuzzle = function(image, onCompleteFn) {
   for (var i = 0, length = this.pieces.length; i < length; i++) {
     this.pieces[i].setBackground(image);
     this.pieces[i].isCorrect = false;
+    this.pieces[i].el.removeClass('correct');
     this.pieces[i].swapIndices(this.pieces[_randomIntBetween(0, length)]);
   }
-  for (var i = 0; i < this.pieces.length; i++) {
+  for (var i = 0, length = this.pieces.length; i < length; i++) {
+    var currentIndex =i;
     this.pieces[i].setIndexedPosition();
     this.pieces[i].scaleTweener.set(1, 1, 1, {
-      duration: 600 + (600 * i / this.pieces.length),
+      duration: 600 + (600 * i / length),
       curve: 'inOutCirc'
+    }, function() {
+      if (currentIndex == length -1) {
+        try { onCompleteFn(); } catch(e) {}
+      }
     });
   }
+
 }
 
 Board.prototype.showGameOverSign = function(gameOverState) {
